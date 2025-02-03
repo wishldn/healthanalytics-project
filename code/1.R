@@ -116,3 +116,47 @@ print(robust_model)
 
 
 
+
+
+
+
+# 分别提取男性和女性的数据
+data_male <- subset(data_clean, SEX == 1)
+data_female <- subset(data_clean, SEX == 2)
+
+
+# 定义权重结构（使用 PERWEIGHT）
+library(lmtest)
+
+# 使用 PERWEIGHT 作为加权变量
+wls_male <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, 
+               data = data_male, weights = PERWEIGHT)
+
+wls_female <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, 
+                 data = data_female, weights = PERWEIGHT)
+
+
+summary(wls_male)
+summary(wls_female)
+
+library(ggplot2)
+
+# 生成残差数据
+residuals_male <- data.frame(Fitted = fitted(wls_male), Residuals = residuals(wls_male))
+residuals_female <- data.frame(Fitted = fitted(wls_female), Residuals = residuals(wls_female))
+
+# 画男性残差图
+ggplot(residuals_male, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "blue", alpha = 0.5) +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  labs(title = "Residual Plot for Males (WLS)", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+# 画女性残差图
+ggplot(residuals_female, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "blue", alpha = 0.5) +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  labs(title = "Residual Plot for Females (WLS)", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+
