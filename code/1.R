@@ -1,4 +1,3 @@
-# 🔹 加载必要的 R 包
 packages <- c("dplyr", "ggplot2", "tidyr", "corrplot", "ggcorrplot", "car", "survey", "ipumsr")
 package.check <- lapply(packages, function(x) {
   if (!require(x, character.only = TRUE)) {
@@ -7,15 +6,17 @@ package.check <- lapply(packages, function(x) {
   }
 })
 
-# 🔹 读取数据
-data <- read.csv("data_f.csv")
 
-# 🔹 选择相关变量并删除无关变量
+# Load data
+ddi <- read_ipums_ddi("nhis_00005.xml")
+data <- read_ipums_micro(ddi)
+
+# View first few rows of the dataset
 data_clean <- data %>%
-  dplyr::select(AGE, SEX,PERWEIGHT, INCFAM07ON, INCFAM97ON2, HEALTH, EDUCREC1, NCHILD, EMPSTATIMP1, CIGDAYMO, CIGSDAY, HRSLEEP, SLEEPFALL, SLEEPSTAY, 
-                 AHOPELESS, ANERVOUS, ARESTLESS, ASAD, AWORTHLESS, AEFFORT) %>%
-  filter(AGE >= 18, CIGSDAY <= 20, INCFAM97ON2 < 90, SLEEPSTAY < 90, SLEEPFALL < 90,
-         AHOPELESS < 6, ANERVOUS < 6, ARESTLESS < 6, ASAD < 6, AWORTHLESS < 6, AEFFORT < 6)
+  dplyr::select(AGE, SEX, PSU, STRATA, PERWEIGHT, INCFAM07ON, INCFAM97ON2, HEALTH, EDUCREC1, NCHILD, EMPSTATIMP1, CIGDAYMO, CIGSDAY, HRSLEEP, SLEEPFALL, SLEEPSTAY, 
+                AHOPELESS, ANERVOUS, ARESTLESS, ASAD, AWORTHLESS, AEFFORT) %>%
+  filter(AGE >= 18, CIGSDAY <= 20, INCFAM07ON < 90, SLEEPSTAY < 90, SLEEPFALL < 90,
+         AHOPELESS < 6, ANERVOUS < 6, ARESTLESS < 6, ASAD < 6, AWORTHLESS < 6, AEFFORT < 6, HEALTH<6)
 
 
 #write.csv(data_clean, file = "~/Desktop/data_clean.csv", row.names = FALSE)
@@ -55,9 +56,17 @@ vif(lm_model_multi)
 
 # 🔹 加权回归分析（如果数据涉及抽样权重）
 library(survey)
+design <- svydesign(
+  ids = ~PSU,         # 聚类变量 (Primary Sampling Unit)
+  strata = ~STRATA,   # 分层变量 (Stratification)
+  weights = ~PERWEIGHT,  # 加权变量
+  data = data_clean,
+  nest = TRUE  # 如果数据有嵌套抽样，使用 nest=TRUE
+)
+
 design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_clean)
 
-weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY,
+weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY,
                          design = design)
 summary(weighted_model)
 
@@ -103,19 +112,6 @@ ggplot(data_clean, aes(x = fitted_wls, y = residuals_wls)) +
 # 重新计算回归模型并使用稳健标准误
 robust_model <- coeftest(lm_model_multi, vcov = vcovHC(lm_model_multi, type = "HC"))
 print(robust_model)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
