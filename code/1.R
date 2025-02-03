@@ -173,6 +173,73 @@ ggplot(residuals_female, aes(x = Fitted, y = Residuals)) +
   theme_minimal()
 
 
+
+
+
+
+# svyglm抽样调查
+
+library(survey)
+
+# 定义男性和女性的抽样设计
+design_male <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_male)
+design_female <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_female)
+
+
+
+# 对男性进行加权回归
+weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, 
+                              design = design_male)
+
+# 对女性进行加权回归
+weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, 
+                                design = design_female)
+
+summary(weighted_model_male)
+summary(weighted_model_female)
+
+# 提取男性模型的拟合值和残差
+residuals_male <- data.frame(
+  Fitted_Values = fitted(weighted_model_male),
+  Residuals = residuals(weighted_model_male)
+)
+
+# 提取女性模型的拟合值和残差
+residuals_female <- data.frame(
+  Fitted_Values = fitted(weighted_model_female),
+  Residuals = residuals(weighted_model_female)
+)
+
+library(ggplot2)
+
+# 绘制男性残差图
+ggplot(residuals_male, aes(x = Fitted_Values, y = Residuals)) +
+  geom_point(color = "blue") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  ggtitle("Residual Plot for Male (Weighted Regression)") +
+  xlab("Fitted Values") + ylab("Residuals")
+
+# 绘制女性残差图
+ggplot(residuals_female, aes(x = Fitted_Values, y = Residuals)) +
+  geom_point(color = "blue") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  ggtitle("Residual Plot for Female (Weighted Regression)") +
+  xlab("Fitted Values") + ylab("Residuals")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #Robustness Check 1
 # 1️⃣ 仅包含核心变量（基准模型）
 model_1 <- svyglm(K6 ~ CIGSDAY, design = design)
