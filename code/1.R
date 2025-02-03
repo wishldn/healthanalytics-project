@@ -173,3 +173,19 @@ ggplot(residuals_female, aes(x = Fitted, y = Residuals)) +
   theme_minimal()
 
 
+#Robustness Check 1
+# 1️⃣ 仅包含核心变量（基准模型）
+model_1 <- svyglm(K6 ~ CIGSDAY, design = design)
+summary(model_1)
+# 2️⃣ 加入基本的人口统计变量
+model_2 <- svyglm(K6 ~ CIGSDAY + AGE + SEX, design = design)
+summary(model_2)
+# 3️⃣ 加入健康和家庭相关变量
+model_3 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD, design = design)
+summary(model_3)
+# 4️⃣ 加入经济变量
+model_4 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON, design = design)
+summary(model_4)
+# 5️⃣ 加入睡眠相关变量（完整模型）
+model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, design = design)
+summary(model_5)
