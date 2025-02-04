@@ -20,7 +20,7 @@ data_clean <- data %>%
 
 
 #write.csv(data_clean, file = "~/Desktop/data_clean.csv", row.names = FALSE)
-# 🔹 计算 K6 变量
+# 🔹 计算 K6 变量 & 处理PERWEIGHT
 data_clean <- data_clean %>%
   mutate(K6 = AHOPELESS + ANERVOUS + ARESTLESS + ASAD + AWORTHLESS + AEFFORT, PERWEIGHT = PERWEIGHT/4)
 
