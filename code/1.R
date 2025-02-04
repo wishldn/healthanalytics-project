@@ -20,15 +20,15 @@ data_clean <- data %>%
 
 
 #write.csv(data_clean, file = "~/Desktop/data_clean.csv", row.names = FALSE)
-# 🔹 计算 K6 变量 & 处理PERWEIGHT
+# Generating K6 as new variable and embedded with weight
 data_clean <- data_clean %>%
   mutate(K6 = AHOPELESS + ANERVOUS + ARESTLESS + ASAD + AWORTHLESS + AEFFORT, PERWEIGHT = PERWEIGHT/4)
 
-# 🔹 相关性分析
+# Correlation analysis
 cor_test <- cor.test(data_clean$CIGSDAY, data_clean$K6, use = "complete.obs")
 print(cor_test)
 
-# 🔹 可视化 CIGSDAY 与 K6 的关系
+# Visualize the relationship between K6 and CIGSDAY
 ggplot(data_clean, aes(x = CIGSDAY, y = K6)) +
   geom_point(alpha = 0.5, color = "blue") +
   geom_smooth(method = "lm", color = "red", se = TRUE) +
@@ -37,16 +37,16 @@ ggplot(data_clean, aes(x = CIGSDAY, y = K6)) +
   theme_minimal()
 
 
-# 🔹 线性回归模型
+# Linear regression model
 lm_model <- lm(K6 ~ CIGSDAY, data = data_clean)
 summary(lm_model)
 
 
-# 🔹 非线性回归模型
+# Non-linear regression model
 lm_model_quad <- lm(K6 ~ CIGSDAY + I(CIGSDAY^2), data = data_clean)
 summary(lm_model_quad)
 
-# 🔹 多元回归分析（控制变量）
+# Multi-regression model
 lm_model_multi <- lm(K6 ~ CIGSDAY + AGE + SEX + INCFAM07ON + SLEEPFALL + SLEEPSTAY, data = data_clean)
 summary(lm_model_multi)
 
