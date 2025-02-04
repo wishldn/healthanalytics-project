@@ -96,14 +96,17 @@ print(bp_test)
 library(sandwich)
 library(lmtest)
 
-# 计算 White 异方差稳健标准误
-white_se <- vcovHC(weighted_model, type = "HC")
+# 计算 Huber-White 异方差稳健标准误
+robust_se <- vcovHC(weighted_model, type = "HC0")  
 
-# White 检验（基于稳健标准误的 F 检验）
-white_test <- coeftest(weighted_model, vcov = white_se)
-print(white_test)
+# 计算带稳健标准误的回归结果
+robust_model <- coeftest(weighted_model, vcov = robust_se)
 
+# 输出稳健标准误的回归结果
+print(robust_model)
 
+#前者调整过头，所以使用Robust Standar Errors: Design-Based Standard Errors 作为最终输出结果
+summary(weighted_model, vartype = c("se", "ci"))
 
 # 3. 画出残差图（Residual Plot）如果点均匀分布，无系统性模式，说明同方差成立。如果点呈现漏斗状或其他系统性变化，说明存在异方差问题。
 library(ggplot2)
