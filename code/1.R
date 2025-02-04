@@ -93,11 +93,11 @@ bp_test <- bptest(weighted_model)
 print(bp_test)
 
 
-# 2. White test，（t 值和 p 值不同于原模型），说明异方差对结果有影响。
+# 2. White test，（t -value and p - value is different from the master model ），heteroscedasticity has influence on the result.
 library(sandwich)
 library(lmtest)
 
-# 计算 Huber-White 异方差稳健标准误
+# Calculating Huber-White heteroscedasticity and robust standard error
 robust_se <- vcovHC(weighted_model, type = "HC0")  
 
 # 计算带稳健标准误的回归结果
