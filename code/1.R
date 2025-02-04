@@ -190,10 +190,12 @@ design_female <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_female)
 # 对男性进行加权回归
 weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
                               design = design_male)
+vcov(weighted_model_male) 
 
 # 对女性进行加权回归
 weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
                                 design = design_female)
+
 
 summary(weighted_model_male)
 summary(weighted_model_female)
