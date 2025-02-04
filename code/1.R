@@ -200,8 +200,10 @@ weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07O
                                 design = design_female)
 
 
-summary(weighted_model_male)
-summary(weighted_model_female)
+# 计算male带聚类（PSU）的标准误
+summary(weighted_model_male, vartype = c("se", "ci"))
+# 计算female带聚类（PSU）的标准误
+summary(weighted_model_female, vartype = c("se", "ci"))
 
 # 提取男性模型的拟合值和残差
 residuals_male <- data.frame(
@@ -248,16 +250,16 @@ ggplot(residuals_female, aes(x = Fitted_Values, y = Residuals)) +
 #Robustness Check 1
 # 1️⃣ 仅包含核心变量（基准模型）
 model_1 <- svyglm(K6 ~ CIGSDAY, design = design)
-summary(model_1)
+summary(model_1, vartype = c("se", "ci"))
 # 2️⃣ 加入基本的人口统计变量
 model_2 <- svyglm(K6 ~ CIGSDAY + AGE + SEX, design = design)
-summary(model_2)
+summary(model_2, vartype = c("se", "ci"))
 # 3️⃣ 加入健康和家庭相关变量
 model_3 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD, design = design)
-summary(model_3)
+summary(model_3, vartype = c("se", "ci"))
 # 4️⃣ 加入经济变量
 model_4 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON, design = design)
-summary(model_4)
+summary(model_4, vartype = c("se", "ci"))
 # 5️⃣ 加入睡眠相关变量（完整模型）
 model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, design = design)
-summary(model_5)
+summary(model_5, vartype = c("se", "ci"))
