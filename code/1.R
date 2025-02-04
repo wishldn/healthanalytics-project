@@ -199,9 +199,49 @@ vcov(weighted_model_male)
 weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
                                 design = design_female)
 
+# 计算整个模型的 F 统计量 male
+f_test <- regTermTest(weighted_model_male, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
+print(f_test)
+
+# R-squared male
+y_hat <- predict(weighted_model_male, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R2_weighted <- 1 - (sse / sst)
+print(R2_weighted)
+
+# male异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
+#p 值 < 0.05：存在异方差问题。
+#p 值 > 0.05：未发现显著的异方差问题。
+library(lmtest)
+bp_test <- bptest(weighted_model_male) 
+print(bp_test)
+
+# 计算整个模型的 F 统计量 female
+f_test <- regTermTest(weighted_model_female, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
+print(f_test)
+
+# R-squared female
+y_hat <- predict(weighted_model_female, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R2_weighted <- 1 - (sse / sst)
+print(R2_weighted)
+
+# female异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
+#p 值 < 0.05：存在异方差问题。
+#p 值 > 0.05：未发现显著的异方差问题。
+library(lmtest)
+bp_test <- bptest(weighted_model_female) 
+print(bp_test)
 
 # 计算male带聚类（PSU）的标准误
 summary(weighted_model_male, vartype = c("se", "ci"))
+
 # 计算female带聚类（PSU）的标准误
 summary(weighted_model_female, vartype = c("se", "ci"))
 
