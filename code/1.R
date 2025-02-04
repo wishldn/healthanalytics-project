@@ -22,7 +22,7 @@ data_clean <- data %>%
 #write.csv(data_clean, file = "~/Desktop/data_clean.csv", row.names = FALSE)
 # 🔹 计算 K6 变量
 data_clean <- data_clean %>%
-  mutate(K6 = AHOPELESS + ANERVOUS + ARESTLESS + ASAD + AWORTHLESS + AEFFORT)
+  mutate(K6 = AHOPELESS + ANERVOUS + ARESTLESS + ASAD + AWORTHLESS + AEFFORT, PERWEIGHT = PERWEIGHT/4)
 
 # 🔹 相关性分析
 cor_test <- cor.test(data_clean$CIGSDAY, data_clean$K6, use = "complete.obs")
