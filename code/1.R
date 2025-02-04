@@ -50,11 +50,11 @@ summary(lm_model_quad)
 lm_model_multi <- lm(K6 ~ CIGSDAY + AGE + SEX + INCFAM07ON + SLEEPFALL + SLEEPSTAY, data = data_clean)
 summary(lm_model_multi)
 
-# 🔹 VIF 多重共线性检查
+# VIF collinearity check
 library(car)
 vif(lm_model_multi)
 
-# 🔹 加权回归分析（如果数据涉及抽样权重）
+# Weighted regression analysis (if data involves sampling weights)
 library(survey)
 design <- svydesign(
   ids = ~PSU,         # 聚类变量 (Primary Sampling Unit)
@@ -70,7 +70,7 @@ weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON
                          design = design)
 summary(weighted_model)
 
-# 计算整个模型的 F 统计量
+# F-test
 f_test <- regTermTest(weighted_model, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
 print(f_test)
 
@@ -83,16 +83,17 @@ sse <- sum(w * (y - y_hat)^2)
 R2_weighted <- 1 - (sse / sst)
 print(R2_weighted)
 
-# 异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
-#p 值 < 0.05：存在异方差问题。
-#p 值 > 0.05：未发现显著的异方差问题。
+# Heteroscedasticity test， 
+1. Breusch-Pagan test
+#p-value < 0.05：existing heteroscedasticity issue.
+#p-value > 0.05：no obvious  heteroscedasticity issue.
 
 library(lmtest)
 bp_test <- bptest(weighted_model) 
 print(bp_test)
 
 
-# 🔹 2. White 检验，（t 值和 p 值不同于原模型），说明异方差对结果有影响。
+# 2. White test，（t 值和 p 值不同于原模型），说明异方差对结果有影响。
 library(sandwich)
 library(lmtest)
 
