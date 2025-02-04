@@ -47,7 +47,7 @@ lm_model_quad <- lm(K6 ~ CIGSDAY + I(CIGSDAY^2), data = data_clean)
 summary(lm_model_quad)
 
 # 🔹 多元回归分析（控制变量）
-lm_model_multi <- lm(K6 ~ CIGSDAY + AGE + SEX + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, data = data_clean)
+lm_model_multi <- lm(K6 ~ CIGSDAY + AGE + SEX + INCFAM07ON + SLEEPFALL + SLEEPSTAY, data = data_clean)
 summary(lm_model_multi)
 
 # 🔹 VIF 多重共线性检查
@@ -66,12 +66,12 @@ design <- svydesign(
 
 design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_clean)
 
-weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY,
+weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY,
                          design = design)
 summary(weighted_model)
 
 # 计算整个模型的 F 统计量
-f_test <- regTermTest(weighted_model, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY)
+f_test <- regTermTest(weighted_model, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
 print(f_test)
 
 # R-squared
@@ -142,10 +142,10 @@ data_female <- subset(data_clean, SEX == 2)
 library(lmtest)
 
 # 使用 PERWEIGHT 作为加权变量
-wls_male <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, 
+wls_male <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
                data = data_male, weights = PERWEIGHT)
 
-wls_female <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, 
+wls_female <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
                  data = data_female, weights = PERWEIGHT)
 
 
@@ -188,11 +188,11 @@ design_female <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_female)
 
 
 # 对男性进行加权回归
-weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, 
+weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
                               design = design_male)
 
 # 对女性进行加权回归
-weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, 
+weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
                                 design = design_female)
 
 summary(weighted_model_male)
@@ -254,5 +254,5 @@ summary(model_3)
 model_4 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON, design = design)
 summary(model_4)
 # 5️⃣ 加入睡眠相关变量（完整模型）
-model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + HRSLEEP + SLEEPFALL + SLEEPSTAY, design = design)
+model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, design = design)
 summary(model_5)
