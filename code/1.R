@@ -198,6 +198,7 @@ vcov(weighted_model_male)
 # 对女性进行加权回归
 weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
                                 design = design_female)
+
 # 🔹 VIF 多重共线性检查 male
 library(car)
 vif(weighted_model_male)
@@ -207,13 +208,13 @@ f_test <- regTermTest(weighted_model_male, ~ CIGSDAY + AGE + SEX + HEALTH + NCHI
 print(f_test)
 
 # R-squared male
-y_hat <- predict(weighted_model_male, type = "response")
-y <- data_clean$K6
-w <- weights(design)
-sst <- sum(w * (y - weighted.mean(y, w))^2)
-sse <- sum(w * (y - y_hat)^2)
-R2_weighted <- 1 - (sse / sst)
-print(R2_weighted)
+y_hat_male <- predict(weighted_model_male, type = "response")
+y_male <- design_male$variables$K6  
+w_male <- weights(design_male)  
+sst_male <- sum(w_male * (y_male - weighted.mean(y_male, w_male))^2)
+sse_male <- sum(w_male * (y_male - y_hat_male)^2)
+r_squared_male <- 1 - (sse_male / sst_male)
+print(r_squared_male)
 
 # male异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
 #p 值 < 0.05：存在异方差问题。
@@ -221,6 +222,7 @@ print(R2_weighted)
 library(lmtest)
 bp_test <- bptest(weighted_model_male) 
 print(bp_test)
+
 
 # 🔹 VIF 多重共线性检查 female
 library(car)
@@ -231,13 +233,13 @@ f_test <- regTermTest(weighted_model_female, ~ CIGSDAY + AGE + SEX + HEALTH + NC
 print(f_test)
 
 # R-squared female
-y_hat <- predict(weighted_model_female, type = "response")
-y <- data_clean$K6
-w <- weights(design)
-sst <- sum(w * (y - weighted.mean(y, w))^2)
-sse <- sum(w * (y - y_hat)^2)
-R2_weighted <- 1 - (sse / sst)
-print(R2_weighted)
+y_hat_female <- predict(weighted_model_female, type = "response")
+y_female <- design_female$variables$K6  
+w_female <- weights(design_female)  
+sst_female <- sum(w_female * (y_female - weighted.mean(y_female, w_female))^2)
+sse_female <- sum(w_female * (y_female - y_hat_female)^2)
+r_squared_female <- 1 - (sse_female / sst_female)
+print(r_squared_female)
 
 # female异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
 #p 值 < 0.05：存在异方差问题。
