@@ -198,6 +198,9 @@ vcov(weighted_model_male)
 # 对女性进行加权回归
 weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
                                 design = design_female)
+# 🔹 VIF 多重共线性检查 male
+library(car)
+vif(weighted_model_male)
 
 # 计算整个模型的 F 统计量 male
 f_test <- regTermTest(weighted_model_male, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
@@ -218,6 +221,10 @@ print(R2_weighted)
 library(lmtest)
 bp_test <- bptest(weighted_model_male) 
 print(bp_test)
+
+# 🔹 VIF 多重共线性检查 female
+library(car)
+vif(weighted_model_female)
 
 # 计算整个模型的 F 统计量 female
 f_test <- regTermTest(weighted_model_female, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
@@ -291,6 +298,9 @@ ggplot(residuals_female, aes(x = Fitted_Values, y = Residuals)) +
 # 1️⃣ 仅包含核心变量（基准模型）
 model_1 <- svyglm(K6 ~ CIGSDAY, design = design)
 summary(model_1, vartype = c("se", "ci"))
+# 计算整个模型的 F 统计量
+f_test <- regTermTest(model_1, ~ CIGSDAY)
+print(f_test) #only changing the variable within regTermTest() according to different models and independent variables and repeat for each model.
 # 2️⃣ 加入基本的人口统计变量
 model_2 <- svyglm(K6 ~ CIGSDAY + AGE + SEX, design = design)
 summary(model_2, vartype = c("se", "ci"))
