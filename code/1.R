@@ -263,3 +263,6 @@ summary(model_4, vartype = c("se", "ci"))
 # 5️⃣ 加入睡眠相关变量（完整模型）
 model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, design = design)
 summary(model_5, vartype = c("se", "ci"))
+#6 adding other potential variables
+model_6 <- svyglm(K6~ CIGSDAY + INCFAM97ON2+EDUCREC1, design=design)
+summary(model_6,vartype=c("se", "ci"))
