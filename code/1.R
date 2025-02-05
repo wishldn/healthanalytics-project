@@ -56,14 +56,18 @@ summary(weighted_model)
 f_test <- regTermTest(weighted_model, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test)
 
-# R-squared
+# R-squared & adjusted
 y_hat <- predict(weighted_model, type = "response")
 y <- data_clean$K6
 w <- weights(design)
 sst <- sum(w * (y - weighted.mean(y, w))^2)
 sse <- sum(w * (y - y_hat)^2)
 R2_weighted <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(weighted_model)) - 1  
+adjusted_R2_weighted <- 1 - ((1 - R2_weighted) * (n - 1) / (n - p - 1))
 print(R2_weighted)
+print(adjusted_R2_weighted)
 
 # Heteroscedasticity test， 
 #p-value < 0.05：existing heteroscedasticity issue.
@@ -189,14 +193,18 @@ vif(weighted_model_male)
 f_test <- regTermTest(weighted_model_male, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test)
 
-# R-squared male
+# R-squared & adjusted male
 y_hat_male <- predict(weighted_model_male, type = "response")
 y_male <- design_male$variables$K6  
 w_male <- weights(design_male)  
 sst_male <- sum(w_male * (y_male - weighted.mean(y_male, w_male))^2)
 sse_male <- sum(w_male * (y_male - y_hat_male)^2)
-r_squared_male <- 1 - (sse_male / sst_male)
-print(r_squared_male)
+R2_male <- 1 - (sse_male / sst_male)
+n_male <- nrow(design_male$variables) 
+p_male <- length(coef(weighted_model_male)) - 1  
+adjusted_R2_male <- 1 - ((1 - R2_male) * (n_male - 1) / (n_male - p_male - 1))
+print(R2_male)  
+print(adjusted_R2_male)  
 
 # male异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
 #p 值 < 0.05：存在异方差问题。
@@ -214,14 +222,18 @@ vif(weighted_model_female)
 f_test <- regTermTest(weighted_model_female, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test)
 
-# R-squared female
+# R-squared & adjusted female
 y_hat_female <- predict(weighted_model_female, type = "response")
 y_female <- design_female$variables$K6  
 w_female <- weights(design_female)  
 sst_female <- sum(w_female * (y_female - weighted.mean(y_female, w_female))^2)
 sse_female <- sum(w_female * (y_female - y_hat_female)^2)
-r_squared_female <- 1 - (sse_female / sst_female)
-print(r_squared_female)
+R2_female <- 1 - (sse_female / sst_female)
+n_female <- nrow(design_female$variables) 
+p_female <- length(coef(weighted_model_female)) - 1  
+adjusted_R2_female <- 1 - ((1 - R2_female) * (n_female - 1) / (n_female - p_female - 1))
+print(R2_female) 
+print(adjusted_R2_female) 
 
 # female异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
 #p 值 < 0.05：存在异方差问题。
