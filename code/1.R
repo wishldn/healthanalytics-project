@@ -36,24 +36,6 @@ ggplot(data_clean, aes(x = CIGSDAY, y = K6)) +
        x = "Cigarettes per Day", y = "K6 Score") +
   theme_minimal()
 
-
-# Linear regression model
-lm_model <- lm(K6 ~ CIGSDAY, data = data_clean)
-summary(lm_model)
-
-
-# Non-linear regression model
-lm_model_quad <- lm(K6 ~ CIGSDAY + I(CIGSDAY^2), data = data_clean)
-summary(lm_model_quad)
-
-# Multi-regression model
-lm_model_multi <- lm(K6 ~ CIGSDAY + AGE + SEX + INCFAM07ON, data = data_clean)
-summary(lm_model_multi)
-
-# VIF collinearity check
-library(car)
-vif(lm_model_multi)
-
 # Weighted regression analysis (if data involves sampling weights)
 library(survey)
 design <- svydesign(
