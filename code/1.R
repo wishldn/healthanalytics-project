@@ -84,7 +84,6 @@ R2_weighted <- 1 - (sse / sst)
 print(R2_weighted)
 
 # Heteroscedasticity test， 
-1. Breusch-Pagan test
 #p-value < 0.05：existing heteroscedasticity issue.
 #p-value > 0.05：no obvious  heteroscedasticity issue.
 
