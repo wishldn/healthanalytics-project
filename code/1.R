@@ -47,7 +47,7 @@ lm_model_quad <- lm(K6 ~ CIGSDAY + I(CIGSDAY^2), data = data_clean)
 summary(lm_model_quad)
 
 # Multi-regression model
-lm_model_multi <- lm(K6 ~ CIGSDAY + AGE + SEX + INCFAM07ON + SLEEPFALL + SLEEPSTAY, data = data_clean)
+lm_model_multi <- lm(K6 ~ CIGSDAY + AGE + SEX + INCFAM07ON, data = data_clean)
 summary(lm_model_multi)
 
 # VIF collinearity check
@@ -66,12 +66,12 @@ design <- svydesign(
 
 design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_clean)
 
-weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY,
+weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON,
                          design = design)
 summary(weighted_model)
 
 # F-test
-f_test <- regTermTest(weighted_model, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
+f_test <- regTermTest(weighted_model, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test)
 
 # R-squared
@@ -146,10 +146,10 @@ data_female <- subset(data_clean, SEX == 2)
 library(lmtest)
 
 # 使用 PERWEIGHT 作为加权变量
-wls_male <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
+wls_male <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON, 
                data = data_male, weights = PERWEIGHT)
 
-wls_female <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
+wls_female <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON, 
                  data = data_female, weights = PERWEIGHT)
 
 
@@ -192,12 +192,12 @@ design_female <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_female)
 
 
 # 对男性进行加权回归
-weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
+weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
                               design = design_male)
 vcov(weighted_model_male) 
 
 # 对女性进行加权回归
-weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, 
+weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
                                 design = design_female)
 
 # 🔹 VIF 多重共线性检查 male
@@ -205,7 +205,7 @@ library(car)
 vif(weighted_model_male)
 
 # 计算整个模型的 F 统计量 male
-f_test <- regTermTest(weighted_model_male, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
+f_test <- regTermTest(weighted_model_male, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test)
 
 # R-squared male
@@ -230,7 +230,7 @@ library(car)
 vif(weighted_model_female)
 
 # 计算整个模型的 F 统计量 female
-f_test <- regTermTest(weighted_model_female, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
+f_test <- regTermTest(weighted_model_female, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test)
 
 # R-squared female
