@@ -354,6 +354,7 @@ summary(model_4, vartype = c("se", "ci"))
 # 计算整个模型的 F 统计量
 f_test <- regTermTest(model_4, ~ CIGSDAY+ AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test) 
+# R-squared & adjusted
 y_hat <- predict(model_4, type = "response")
 y <- data_clean$K6
 w <- weights(design)
