@@ -290,25 +290,98 @@ ggplot(residuals_female, aes(x = Fitted_Values, y = Residuals)) +
 
 
 
-#Robustness Check 1
-# 1️⃣ 仅包含核心变量（基准模型）
+#Robustness Check
+# 1️仅包含核心变量
 model_1 <- svyglm(K6 ~ CIGSDAY, design = design)
 summary(model_1, vartype = c("se", "ci"))
 # 计算整个模型的 F 统计量
 f_test <- regTermTest(model_1, ~ CIGSDAY)
-print(f_test) #only changing the variable within regTermTest() according to different models and independent variables and repeat for each model.
-# 2️⃣ 加入基本的人口统计变量
+print(f_test) 
+# R-squared & adjusted
+y_hat <- predict(model_1, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R21 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_1)) - 1  
+adjusted_R21 <- 1 - ((1 - R21) * (n - 1) / (n - p - 1))
+print(R21)
+print(adjusted_R21)
+
+# 2️加入基本的人口统计变量
 model_2 <- svyglm(K6 ~ CIGSDAY + AGE + SEX, design = design)
 summary(model_2, vartype = c("se", "ci"))
-# 3️⃣ 加入健康和家庭相关变量
+# 计算整个模型的 F 统计量
+f_test <- regTermTest(model_2, ~ CIGSDAY+ AGE + SEX)
+print(f_test) 
+# R-squared & adjusted
+y_hat <- predict(model_2, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R22 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_2)) - 1  
+adjusted_R22 <- 1 - ((1 - R22) * (n - 1) / (n - p - 1))
+print(R22)
+print(adjusted_R22)
+
+# 3️加入健康和家庭相关变量
 model_3 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD, design = design)
 summary(model_3, vartype = c("se", "ci"))
-# 4️⃣ 加入经济变量
+# 计算整个模型的 F 统计量
+f_test <- regTermTest(model_3, ~ CIGSDAY+ AGE + SEX + HEALTH + NCHILD)
+print(f_test) 
+# R-squared & adjusted
+y_hat <- predict(model_3, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R23 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_3)) - 1  
+adjusted_R23 <- 1 - ((1 - R23) * (n - 1) / (n - p - 1))
+print(R23)
+print(adjusted_R23)
+
+# 4️加入经济变量
 model_4 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON, design = design)
 summary(model_4, vartype = c("se", "ci"))
-# 5️⃣ 加入睡眠相关变量（完整模型）
+# 计算整个模型的 F 统计量
+f_test <- regTermTest(model_4, ~ CIGSDAY+ AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
+print(f_test) 
+y_hat <- predict(model_4, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R24 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_4)) - 1  
+adjusted_R24 <- 1 - ((1 - R24) * (n - 1) / (n - p - 1))
+print(R24)
+print(adjusted_R24)
+
+# 5️加入睡眠相关变量（完整模型）
 model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, design = design)
 summary(model_5, vartype = c("se", "ci"))
-#6 adding other potential variables
-model_6 <- svyglm(K6~ CIGSDAY + INCFAM97ON2+EDUCREC1, design=design)
-summary(model_6,vartype=c("se", "ci"))
+# 计算整个模型的 F 统计量
+f_test <- regTermTest(model_5, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
+print(f_test) 
+# R-squared & adjusted
+y_hat <- predict(model_5, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R25 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_5)) - 1  
+adjusted_R25 <- 1 - ((1 - R25) * (n - 1) / (n - p - 1))
+print(R25)
+print(adjusted_R25)
+
