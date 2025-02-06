@@ -1,0 +1,466 @@
+---
+title: "Association Between Smoking and Mental Health: Empirical Evidence from IPUMS NHIS Data of US"
+author: "Group Q: 
+Haoxuan Li
+Jing Liu
+Lingjia Kang
+Qiannuo Chen
+Sitong Yan
+Xuyuan Jin"
+date: "2025.02.01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Required Packages
+
+```{r}
+# Load required packages
+# This ensures that all necessary libraries for data manipulation, visualization, and statistical modeling are installed and loaded.
+packages <- c("dplyr", "ggplot2", "tidyr", "corrplot", "ggcorrplot", "car", "survey", "ipumsr")
+package.check <- lapply(packages, function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE)
+  }
+})
+```
+
+## Load and Clean Data
+
+```{r}
+# Load dataset using IPUMS
+# The dataset contains various demographic and health-related variables, which will be used for statistical analysis.
+ddi <- read_ipums_ddi("nhis_00005.xml")
+data <- read_ipums_micro(ddi)
+```
+
+```{r}
+# Select relevant variables and clean the data
+# This step filters out inappropriate values and ensures that only adults (18+) are included.
+data_clean <- data %>%
+  dplyr::select(AGE, SEX, PSU, STRATA, PERWEIGHT, INCFAM07ON, INCFAM97ON2, HEALTH, EDUCREC1, NCHILD, EMPSTATIMP1, CIGDAYMO, CIGSDAY, HRSLEEP, SLEEPFALL, SLEEPSTAY, 
+                AHOPELESS, ANERVOUS, ARESTLESS, ASAD, AWORTHLESS, AEFFORT) %>%
+  filter(AGE >= 18, CIGSDAY <= 20, INCFAM07ON < 90, SLEEPSTAY < 90, SLEEPFALL < 90,
+         AHOPELESS < 6, ANERVOUS < 6, ARESTLESS < 6, ASAD < 6, AWORTHLESS < 6, AEFFORT < 6, HEALTH < 6, EMPSTATIMP1 != 0, INCFAM07ON < 96, INCFAM97ON2 < 97)
+```
+
+## Feature Engineering: Creating a New Variable K6
+
+```{r}
+# Create a composite psychological distress score (K6) and adjust weight variable
+# The K6 variable aggregates six mental health indicators to measure psychological distress.
+data_clean <- data_clean %>%
+  mutate(K6 = AHOPELESS + ANERVOUS + ARESTLESS + ASAD + AWORTHLESS + AEFFORT, 
+         PERWEIGHT = PERWEIGHT / 4)  # Adjusting weight by dividing by 4
+```
+
+## Correlation Analysis
+
+```{r}
+# Calculate correlation between daily cigarette consumption and psychological distress
+cor_test <- cor.test(data_clean$CIGSDAY, data_clean$K6, use = "complete.obs")
+print(cor_test)
+```
+
+## Visualization: Relationship between K6 and Cigarette Consumption
+
+```{r}
+# Scatter plot with linear regression line
+# This plot helps visualize the relationship between smoking and psychological distress.
+ggplot(data_clean, aes(x = CIGSDAY, y = K6)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Cigarettes Per Day vs. Psychological Distress (K6)",
+       x = "Cigarettes per Day", y = "K6 Score") +
+  theme_minimal()
+```
+
+## Weighted Regression Analysis
+
+```{r}
+# Define survey design for weighted analysis
+# This accounts for survey sampling weights to provide more accurate estimates.
+library(survey)
+design <- svydesign(ids = ~PSU, strata = ~STRATA, weights = ~PERWEIGHT, data = data_clean, nest = TRUE)
+design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_clean)
+```
+
+```{r}
+# Perform weighted regression analysis
+weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON, design = design)
+summary(weighted_model)
+```
+
+## F-test for Model Significance
+
+```{r}
+# Perform F-test to check the significance of predictors
+f_test <- regTermTest(weighted_model, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
+print(f_test)
+```
+
+## Compute Weighted R-Squared and Adjusted R-Squared
+
+```{r}
+# Compute R-squared and adjusted R-squared for the weighted model
+y_hat <- predict(weighted_model, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R2_weighted <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(weighted_model)) - 1  
+adjusted_R2_weighted <- 1 - ((1 - R2_weighted) * (n - 1) / (n - p - 1))
+print(R2_weighted)
+print(adjusted_R2_weighted)
+```
+
+## Heteroscedasticity Tests
+
+```{r}
+# Breusch-Pagan test for heteroscedasticity
+library(lmtest)
+bp_test <- bptest(weighted_model)
+print(bp_test)
+```
+
+```{r}
+# White test for heteroscedasticity (alternative method)
+library(sandwich)
+robust_se <- vcovHC(weighted_model, type = "HC0")  
+robust_model <- coeftest(weighted_model, vcov = robust_se)
+print(robust_model)
+```
+
+## Residual Plot for Heteroscedasticity Check
+
+```{r}
+# Create residual plot to check for heteroscedasticity
+data_clean$residuals_wls <- residuals(weighted_model)
+data_clean$fitted_wls <- fitted(weighted_model)
+
+ggplot(data_clean, aes(x = fitted_wls, y = residuals_wls)) +
+  geom_point(alpha = 0.5, color = "blue") +  
+  geom_smooth(method = "loess", color = "red", se = FALSE) +  
+  labs(title = "Residual Plot for Weighted Least Squares (WLS)",
+       x = "Fitted Values",
+       y = "Residuals") +
+  theme_minimal()
+```
+
+## Gender-Specific Analysis
+
+```{r}
+# Separate analysis for male and female participants
+data_male <- subset(data_clean, SEX == 1)
+data_female <- subset(data_clean, SEX == 2)
+
+wls_male <- lm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, data = data_male, weights = PERWEIGHT)
+wls_female <- lm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, data = data_female, weights = PERWEIGHT)
+
+summary(wls_male)
+summary(wls_female)
+```
+
+## Residual Analysis for Weighted Least Squares (WLS)
+
+```{r load-libraries, message=FALSE}
+# Load required libraries
+library(ggplot2)
+```
+
+```{r residuals-male}
+# Generate residuals for males
+residuals_male <- data.frame(Fitted = fitted(wls_male), Residuals = residuals(wls_male))
+
+# Create residual plot for males
+# Purpose: To check if residuals are randomly distributed around zero, indicating a well-fitted model.
+ggplot(residuals_male, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "blue", alpha = 0.5) +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  labs(title = "Residual Plot for Males (WLS)", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+```
+
+```{r residuals-female}
+# Generate residuals for females
+residuals_female <- data.frame(Fitted = fitted(wls_female), Residuals = residuals(wls_female))
+
+# Create residual plot for females
+# Purpose: To assess model adequacy and check for heteroscedasticity.
+ggplot(residuals_female, aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "blue", alpha = 0.5) +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  labs(title = "Residual Plot for Females (WLS)", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+```
+
+## Survey Weighted Regression Analysis
+
+```{r load-survey-libraries, message=FALSE}
+# Load required library for survey-weighted regression
+library(survey)
+```
+
+```{r define-survey-design}
+# Define survey design objects for males and females
+# Purpose: To account for survey weights in the regression analysis.
+design_male <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_male)
+design_female <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_female)
+```
+
+```{r weighted-regression-male}
+# Run weighted regression for males
+# Purpose: To estimate regression coefficients while accounting for survey weights.
+weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
+                              design = design_male)
+
+# Extract variance-covariance matrix of the estimated coefficients
+vcov(weighted_model_male) 
+```
+
+```{r weighted-regression-female}
+# Run weighted regression for females
+weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
+                                design = design_female)
+```
+
+## Multicollinearity Check Using Variance Inflation Factor (VIF)
+
+```{r load-vif-library, message=FALSE}
+# Load library for multicollinearity checks
+library(car)
+```
+
+```{r vif-check-male}
+# Check for multicollinearity in the male model
+# Purpose: To detect whether predictor variables are highly correlated.
+vif(weighted_model_male)
+```
+
+```{r vif-check-female}
+# Check for multicollinearity in the female model
+vif(weighted_model_female)
+```
+
+## Model Fit Assessment
+
+```{r f-test-male}
+# Compute F-test for the overall significance of the male model
+# Purpose: To test if at least one predictor variable significantly contributes to the model.
+f_test_male <- regTermTest(weighted_model_male, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
+print(f_test_male)
+```
+
+```{r f-test-female}
+# Compute F-test for the female model
+f_test_female <- regTermTest(weighted_model_female, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
+print(f_test_female)
+```
+
+```{r r-squared-male}
+# Compute R-squared and Adjusted R-squared for the male model
+# Purpose: To measure how well the regression model explains the variance in the dependent variable.
+y_hat_male <- predict(weighted_model_male, type = "response")
+y_male <- design_male$variables$K6  
+w_male <- weights(design_male)  
+sst_male <- sum(w_male * (y_male - weighted.mean(y_male, w_male))^2)
+sse_male <- sum(w_male * (y_male - y_hat_male)^2)
+R2_male <- 1 - (sse_male / sst_male)
+n_male <- nrow(design_male$variables) 
+p_male <- length(coef(weighted_model_male)) - 1  
+adjusted_R2_male <- 1 - ((1 - R2_male) * (n_male - 1) / (n_male - p_male - 1))
+print(R2_male)  
+print(adjusted_R2_male)  
+```
+
+```{r r-squared-female}
+# Compute R-squared and Adjusted R-squared for the female model
+y_hat_female <- predict(weighted_model_female, type = "response")
+y_female <- design_female$variables$K6  
+w_female <- weights(design_female)  
+sst_female <- sum(w_female * (y_female - weighted.mean(y_female, w_female))^2)
+sse_female <- sum(w_female * (y_female - y_hat_female)^2)
+R2_female <- 1 - (sse_female / sst_female)
+n_female <- nrow(design_female$variables) 
+p_female <- length(coef(weighted_model_female)) - 1  
+adjusted_R2_female <- 1 - ((1 - R2_female) * (n_female - 1) / (n_female - p_female - 1))
+print(R2_female) 
+print(adjusted_R2_female) 
+```
+
+## Heteroscedasticity Test
+
+```{r load-lmtest-library, message=FALSE}
+# Load library for heteroscedasticity tests
+library(lmtest)
+```
+
+```{r bp-test-male}
+# Perform Breusch-Pagan test for heteroscedasticity in the male model
+# Purpose: To check if variance of residuals is constant across all fitted values.
+bp_test_male <- bptest(weighted_model_male) 
+print(bp_test_male)
+```
+```{r bp-test-female}
+# Perform Breusch-Pagan test for the female model
+bp_test_female <- bptest(weighted_model_female) 
+print(bp_test_female)
+```
+
+## Weighted Regression Analysis and Robustness Checks
+
+### 1. Standard Errors with PSU Clustering
+
+This section calculates the standard errors (SE) and confidence intervals (CI) for the weighted regression models separately for male and female groups, considering PSU clustering.
+
+```{r standard_errors}
+# Compute standard errors and confidence intervals for male model
+summary(weighted_model_male, vartype = c("se", "ci"))
+
+# Compute standard errors and confidence intervals for female model
+summary(weighted_model_female, vartype = c("se", "ci"))
+```
+
+### 2. Residual Analysis
+
+Residual analysis helps assess model assumptions such as homoscedasticity and normality. Here, we extract fitted values and residuals for both male and female models and visualize them using residual plots.
+
+```{r residual_analysis}
+library(ggplot2)
+
+# Extract fitted values and residuals for male model
+residuals_male <- data.frame(
+  Fitted_Values = fitted(weighted_model_male),
+  Residuals = residuals(weighted_model_male)
+)
+
+# Extract fitted values and residuals for female model
+residuals_female <- data.frame(
+  Fitted_Values = fitted(weighted_model_female),
+  Residuals = residuals(weighted_model_female)
+)
+
+# Plot residuals for male model
+ggplot(residuals_male, aes(x = Fitted_Values, y = Residuals)) +
+  geom_point(color = "blue") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  ggtitle("Residual Plot for Male (Weighted Regression)") +
+  xlab("Fitted Values") + ylab("Residuals")
+
+# Plot residuals for female model
+ggplot(residuals_female, aes(x = Fitted_Values, y = Residuals)) +
+  geom_point(color = "blue") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  ggtitle("Residual Plot for Female (Weighted Regression)") +
+  xlab("Fitted Values") + ylab("Residuals")
+```
+
+### 3. Robustness Checks
+
+To ensure the robustness of our regression results, we run multiple models with increasing levels of control variables.
+
+#### Model 1: Core Variable Only
+
+This model includes only the core independent variable (CIGSDAY).
+
+```{r model_1}
+model_1 <- svyglm(K6 ~ CIGSDAY, design = design)
+summary(model_1, vartype = c("se", "ci"))
+
+# Compute F-test for overall model significance
+f_test <- regTermTest(model_1, ~ CIGSDAY)
+print(f_test)
+```
+
+#### Model 2: Adding Demographic Variables
+
+This model includes age and sex as additional covariates.
+
+```{r model_2}
+model_2 <- svyglm(K6 ~ CIGSDAY + AGE + SEX, design = design)
+summary(model_2, vartype = c("se", "ci"))
+
+f_test <- regTermTest(model_2, ~ CIGSDAY + AGE + SEX)
+print(f_test)
+```
+
+#### Model 3: Adding Health and Family Variables
+
+This model adds health status and number of children as additional covariates.
+
+```{r model_3}
+model_3 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD, design = design)
+summary(model_3, vartype = c("se", "ci"))
+
+f_test <- regTermTest(model_3, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD)
+print(f_test)
+```
+
+#### Model 4: Adding Economic Variables
+
+This model further incorporates family income as an additional control variable.
+
+```{r model_4}
+model_4 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON, design = design)
+summary(model_4, vartype = c("se", "ci"))
+
+f_test <- regTermTest(model_4, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
+print(f_test)
+```
+
+#### Model 5: Full Model Including Sleep Variables
+
+This is the most comprehensive model, incorporating sleep-related variables as well.
+
+```{r model_5}
+model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, design = design)
+summary(model_5, vartype = c("se", "ci"))
+
+f_test <- regTermTest(model_5, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
+print(f_test)
+```
+
+### 4. Model Fit Evaluation
+
+To evaluate model performance, we compute R-squared and adjusted R-squared for each model.
+
+```{r model_fit}
+compute_r2 <- function(model, data, design) {
+  y_hat <- predict(model, type = "response")
+  y <- data$K6
+  w <- weights(design)
+  sst <- sum(w * (y - weighted.mean(y, w))^2)
+  sse <- sum(w * (y - y_hat)^2)
+  R2 <- 1 - (sse / sst)
+  n <- nrow(data)
+  p <- length(coef(model)) - 1
+  adjusted_R2 <- 1 - ((1 - R2) * (n - 1) / (n - p - 1))
+  return(list(R2 = R2, adjusted_R2 = adjusted_R2))
+}
+
+r2_model_1 <- compute_r2(model_1, data_clean, design)
+print(r2_model_1)
+
+r2_model_2 <- compute_r2(model_2, data_clean, design)
+print(r2_model_2)
+
+r2_model_3 <- compute_r2(model_3, data_clean, design)
+print(r2_model_3)
+
+r2_model_4 <- compute_r2(model_4, data_clean, design)
+print(r2_model_4)
+
+r2_model_5 <- compute_r2(model_5, data_clean, design)
+print(r2_model_5)
+```
+
+### Conclusion
+
+This analysis systematically examines the relationship between smoking (CIGSDAY) and psychological distress (K6) while incorporating various control variables in a stepwise manner. The robustness checks ensure the reliability of the results by evaluating the model fit and significance across different specifications.
+
