@@ -85,7 +85,6 @@ ggplot(data_clean, aes(x = CIGSDAY, y = K6)) +
 # Define survey design for weighted analysis
 # This accounts for survey sampling weights to provide more accurate estimates.
 library(survey)
-design <- svydesign(ids = ~PSU, strata = ~STRATA, weights = ~PERWEIGHT, data = data_clean, nest = TRUE)
 design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_clean)
 ```
 
