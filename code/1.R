@@ -206,19 +206,20 @@ adjusted_R2_male <- 1 - ((1 - R2_male) * (n_male - 1) / (n_male - p_male - 1))
 print(R2_male)  
 print(adjusted_R2_male)  
 
-# male异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
-#p 值 < 0.05：存在异方差问题。
-#p 值 > 0.05：未发现显著的异方差问题。
+# male heteroscedasticity test
+#🔹 1. Breusch-Pagan test（BP test）， run Breusch-Pagan test，
+#p-value < 0.05：have heteroscedasticity issue.
+#p-value > 0.05：no significant heteroscedasticity issue
 library(lmtest)
 bp_test <- bptest(weighted_model_male) 
 print(bp_test)
 
 
-# 🔹 VIF 多重共线性检查 female
+# 🔹 VIF check for female
 library(car)
 vif(weighted_model_female)
 
-# 计算整个模型的 F 统计量 female
+# Calculating the F-Statistic for female
 f_test <- regTermTest(weighted_model_female, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test)
 
@@ -235,26 +236,27 @@ adjusted_R2_female <- 1 - ((1 - R2_female) * (n_female - 1) / (n_female - p_fema
 print(R2_female) 
 print(adjusted_R2_female) 
 
-# female异方差检验， 🔹 1. Breusch-Pagan 检验（BP 检验）， 运行 Breusch-Pagan 检验，
-#p 值 < 0.05：存在异方差问题。
-#p 值 > 0.05：未发现显著的异方差问题。
+#Female heteroscedasticity test
+#🔹 1. Breusch-Pagan test（BP test）， run Breusch-Pagan test，
+#p-value < 0.05：have heteroscedasticity issue.
+#p-value > 0.05：no significant heteroscedasticity issue
 library(lmtest)
 bp_test <- bptest(weighted_model_female) 
 print(bp_test)
 
-# 计算male带聚类（PSU）的标准误
+# Standard error for calculating male band clustering (PSU)
 summary(weighted_model_male, vartype = c("se", "ci"))
 
-# 计算female带聚类（PSU）的标准误
+# Standard error for calculating female band clustering (PSU)
 summary(weighted_model_female, vartype = c("se", "ci"))
 
-# 提取男性模型的拟合值和残差
+# The fit values and residuals of the male model were extracted
 residuals_male <- data.frame(
   Fitted_Values = fitted(weighted_model_male),
   Residuals = residuals(weighted_model_male)
 )
 
-# 提取女性模型的拟合值和残差
+# The fit values and residuals of the female model were extracted
 residuals_female <- data.frame(
   Fitted_Values = fitted(weighted_model_female),
   Residuals = residuals(weighted_model_female)
@@ -262,14 +264,14 @@ residuals_female <- data.frame(
 
 library(ggplot2)
 
-# 绘制男性残差图
+# Plotting the residual graph for male
 ggplot(residuals_male, aes(x = Fitted_Values, y = Residuals)) +
   geom_point(color = "blue") +
   geom_smooth(method = "loess", color = "red", se = FALSE) +
   ggtitle("Residual Plot for Male (Weighted Regression)") +
   xlab("Fitted Values") + ylab("Residuals")
 
-# 绘制女性残差图
+# Plotting the residual graph for female
 ggplot(residuals_female, aes(x = Fitted_Values, y = Residuals)) +
   geom_point(color = "blue") +
   geom_smooth(method = "loess", color = "red", se = FALSE) +
@@ -291,10 +293,10 @@ ggplot(residuals_female, aes(x = Fitted_Values, y = Residuals)) +
 
 
 #Robustness Check
-# 1️仅包含核心变量
+# 1️: Only considering the core independent variable
 model_1 <- svyglm(K6 ~ CIGSDAY, design = design)
 summary(model_1, vartype = c("se", "ci"))
-# 计算整个模型的 F 统计量
+# Calculating the F-Statistic
 f_test <- regTermTest(model_1, ~ CIGSDAY)
 print(f_test) 
 # R-squared & adjusted
@@ -310,10 +312,10 @@ adjusted_R21 <- 1 - ((1 - R21) * (n - 1) / (n - p - 1))
 print(R21)
 print(adjusted_R21)
 
-# 2️加入基本的人口统计变量
+# 2️:Adding the variables of age and sex
 model_2 <- svyglm(K6 ~ CIGSDAY + AGE + SEX, design = design)
 summary(model_2, vartype = c("se", "ci"))
-# 计算整个模型的 F 统计量
+# Calculating the F-Statistic
 f_test <- regTermTest(model_2, ~ CIGSDAY+ AGE + SEX)
 print(f_test) 
 # R-squared & adjusted
@@ -329,10 +331,10 @@ adjusted_R22 <- 1 - ((1 - R22) * (n - 1) / (n - p - 1))
 print(R22)
 print(adjusted_R22)
 
-# 3️加入健康和家庭相关变量
+# 3️: Adding variables about general health condition and family
 model_3 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD, design = design)
 summary(model_3, vartype = c("se", "ci"))
-# 计算整个模型的 F 统计量
+# Calculating the F-Statistic
 f_test <- regTermTest(model_3, ~ CIGSDAY+ AGE + SEX + HEALTH + NCHILD)
 print(f_test) 
 # R-squared & adjusted
@@ -348,10 +350,10 @@ adjusted_R23 <- 1 - ((1 - R23) * (n - 1) / (n - p - 1))
 print(R23)
 print(adjusted_R23)
 
-# 4️加入经济变量
+# 4️: Adding income related variable
 model_4 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON, design = design)
 summary(model_4, vartype = c("se", "ci"))
-# 计算整个模型的 F 统计量
+# Calculating the F-Statistic
 f_test <- regTermTest(model_4, ~ CIGSDAY+ AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test) 
 # R-squared & adjusted
@@ -367,10 +369,10 @@ adjusted_R24 <- 1 - ((1 - R24) * (n - 1) / (n - p - 1))
 print(R24)
 print(adjusted_R24)
 
-# 5️加入睡眠相关变量（完整模型）
+# 5️: Adding sleep related variable (entire model)
 model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, design = design)
 summary(model_5, vartype = c("se", "ci"))
-# 计算整个模型的 F 统计量
+# Calculating the F-Statistics for the entire model
 f_test <- regTermTest(model_5, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
 print(f_test) 
 # R-squared & adjusted
