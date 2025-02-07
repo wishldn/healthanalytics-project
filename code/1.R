@@ -39,11 +39,11 @@ ggplot(data_clean, aes(x = CIGSDAY, y = K6)) +
 # Weighted regression analysis (if data involves sampling weights)
 library(survey)
 design <- svydesign(
-  ids = ~PSU,         # 聚类变量 (Primary Sampling Unit)
-  strata = ~STRATA,   # 分层变量 (Stratification)
-  weights = ~PERWEIGHT,  # 加权变量
+  ids = ~PSU,
+  strata = ~STRATA,
+  weights = ~PERWEIGHT,
   data = data_clean,
-  nest = TRUE  # 如果数据有嵌套抽样，使用 nest=TRUE
+  nest = TRUE 
 )
 
 design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_clean)
@@ -103,8 +103,8 @@ data_clean$fitted_wls <- fitted(weighted_model)
 
 # Plotting residual graph
 ggplot(data_clean, aes(x = fitted_wls, y = residuals_wls)) +
-  geom_point(alpha = 0.5, color = "blue") +  # 绘制残差点
-  geom_smooth(method = "loess", color = "red", se = FALSE) +  # 添加 LOESS 平滑曲线
+  geom_point(alpha = 0.5, color = "blue") + 
+  geom_smooth(method = "loess", color = "red", se = FALSE) +  
   labs(title = "Residual Plot for Weighted Least Squares (WLS)",
        x = "Fitted Values",
        y = "Residuals") +
@@ -185,7 +185,7 @@ vcov(weighted_model_male)
 weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
                                 design = design_female)
 
-# 🔹 VIF check: male
+# VIF check: male
 library(car)
 vif(weighted_model_male)
 
@@ -207,7 +207,7 @@ print(R2_male)
 print(adjusted_R2_male)  
 
 # male heteroscedasticity test
-#🔹 1. Breusch-Pagan test（BP test）， run Breusch-Pagan test，
+#1. Breusch-Pagan test（BP test）， run Breusch-Pagan test，
 #p-value < 0.05：have heteroscedasticity issue.
 #p-value > 0.05：no significant heteroscedasticity issue
 library(lmtest)
@@ -215,7 +215,7 @@ bp_test <- bptest(weighted_model_male)
 print(bp_test)
 
 
-# 🔹 VIF check for female
+# VIF check for female
 library(car)
 vif(weighted_model_female)
 
@@ -237,7 +237,7 @@ print(R2_female)
 print(adjusted_R2_female) 
 
 #Female heteroscedasticity test
-#🔹 1. Breusch-Pagan test（BP test）， run Breusch-Pagan test，
+#1. Breusch-Pagan test（BP test）， run Breusch-Pagan test，
 #p-value < 0.05：have heteroscedasticity issue.
 #p-value > 0.05：no significant heteroscedasticity issue
 library(lmtest)
