@@ -1,4 +1,7 @@
 packages <- c("dplyr", "ggplot2", "tidyr", "corrplot", "ggcorrplot", "car", "survey", "ipumsr")
+library(lmtest)
+library(sandwich)
+library(lmtest)
 package.check <- lapply(packages, function(x) {
   if (!require(x, character.only = TRUE)) {
     install.packages(x, dependencies = TRUE)
@@ -37,15 +40,6 @@ ggplot(data_clean, aes(x = CIGSDAY, y = K6)) +
   theme_minimal()
 
 # Weighted regression analysis (if data involves sampling weights)
-library(survey)
-design <- svydesign(
-  ids = ~PSU,
-  strata = ~STRATA,
-  weights = ~PERWEIGHT,
-  data = data_clean,
-  nest = TRUE 
-)
-
 design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_clean)
 
 weighted_model <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON,
@@ -69,19 +63,13 @@ adjusted_R2_weighted <- 1 - ((1 - R2_weighted) * (n - 1) / (n - p - 1))
 print(R2_weighted)
 print(adjusted_R2_weighted)
 
-# Heteroscedasticity test， 
-#p-value < 0.05：existing heteroscedasticity issue.
-#p-value > 0.05：no obvious  heteroscedasticity issue.
-
-library(lmtest)
+# Heteroscedasticity test,
+# 1. Breusch-Pagan Test
 bp_test <- bptest(weighted_model) 
 print(bp_test)
 
 
-# 2. White test，（t -value and p - value is different from the master model ），heteroscedasticity has influence on the result.
-library(sandwich)
-library(lmtest)
-
+# 2. White test
 # Calculating Huber-White heteroscedasticity and robust standard error
 robust_se <- vcovHC(weighted_model, type = "HC0")  
 
@@ -94,99 +82,38 @@ print(robust_model)
 #the robust_mode was over-adjusted，therefore  the Robust Standar Errors: Design-Based Standard Errors was used as the final print result
 summary(weighted_model, vartype = c("se", "ci"))
 
-# 3. Residual Plot："If the points are uniformly distributed without a systematic pattern, it indicates that homoscedasticity holds. If the points exhibit a funnel shape or other systematic variations, it suggests the presence of heteroscedasticity.
-library(ggplot2)
-
-# Calculating the residual of WLS
-data_clean$residuals_wls <- residuals(weighted_model)
-data_clean$fitted_wls <- fitted(weighted_model)
+# 3. Residual Plot
+# Calculating the residual of svyglm
+data_clean$residuals_svyglm <- residuals(weighted_model)
+data_clean$fitted_svyglm <- fitted(weighted_model)
 
 # Plotting residual graph
-ggplot(data_clean, aes(x = fitted_wls, y = residuals_wls)) +
+ggplot(data_clean, aes(x = fitted_svyglm, y = residuals_svyglm)) +
   geom_point(alpha = 0.5, color = "blue") + 
   geom_smooth(method = "loess", color = "red", se = FALSE) +  
-  labs(title = "Residual Plot for Weighted Least Squares (WLS)",
+  labs(title = "Residual Plot for Survey Weighted Generalized Linear Model",
        x = "Fitted Values",
        y = "Residuals") +
   theme_minimal()
-
-
-# Building the regression model again with the robust se
-robust_model <- coeftest(lm_model_multi, vcov = vcovHC(lm_model_multi, type = "HC"))
-print(robust_model)
-
-
-
-
-
-
-
 
 # Extract the data from male and female separately
 data_male <- subset(data_clean, SEX == 1)
 data_female <- subset(data_clean, SEX == 2)
 
-
-# Define the weight structure（using PERWEIGHT）
-library(lmtest)
-
-# Using PERWEIGHT as weighted variable
-wls_male <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON, 
-               data = data_male, weights = PERWEIGHT)
-
-wls_female <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON, 
-                 data = data_female, weights = PERWEIGHT)
-
-
-summary(wls_male)
-summary(wls_female)
-
-library(ggplot2)
-
-# Generating the result of residual
-residuals_male <- data.frame(Fitted = fitted(wls_male), Residuals = residuals(wls_male))
-residuals_female <- data.frame(Fitted = fitted(wls_female), Residuals = residuals(wls_female))
-
-# Plotting the residual graph for male
-ggplot(residuals_male, aes(x = Fitted, y = Residuals)) +
-  geom_point(color = "blue", alpha = 0.5) +
-  geom_smooth(method = "loess", color = "red", se = FALSE) +
-  labs(title = "Residual Plot for Males (WLS)", x = "Fitted Values", y = "Residuals") +
-  theme_minimal()
-
-# Plotting the residual graph for female
-ggplot(residuals_female, aes(x = Fitted, y = Residuals)) +
-  geom_point(color = "blue", alpha = 0.5) +
-  geom_smooth(method = "loess", color = "red", se = FALSE) +
-  labs(title = "Residual Plot for Females (WLS)", x = "Fitted Values", y = "Residuals") +
-  theme_minimal()
-
-
-
-
-
-
 # svyglm for sample survey
-
-library(survey)
-
 # Define the samplomg design for male and femmale
 design_male <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_male)
 design_female <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_female)
 
-
-
 # Weighted regression for male
 weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
                               design = design_male)
-vcov(weighted_model_male) 
 
 # Weighted regression for female
 weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
                                 design = design_female)
 
-# VIF check: male
-library(car)
+# VIF check for male
 vif(weighted_model_male)
 
 # Calculate the F statistic for the entire model: male
@@ -207,16 +134,12 @@ print(R2_male)
 print(adjusted_R2_male)  
 
 # male heteroscedasticity test
-#1. Breusch-Pagan test（BP test）， run Breusch-Pagan test，
-#p-value < 0.05：have heteroscedasticity issue.
-#p-value > 0.05：no significant heteroscedasticity issue
-library(lmtest)
+# Run BP test
 bp_test <- bptest(weighted_model_male) 
 print(bp_test)
 
 
 # VIF check for female
-library(car)
 vif(weighted_model_female)
 
 # Calculating the F-Statistic for female
@@ -237,10 +160,7 @@ print(R2_female)
 print(adjusted_R2_female) 
 
 #Female heteroscedasticity test
-#1. Breusch-Pagan test（BP test）， run Breusch-Pagan test，
-#p-value < 0.05：have heteroscedasticity issue.
-#p-value > 0.05：no significant heteroscedasticity issue
-library(lmtest)
+#Run BP test
 bp_test <- bptest(weighted_model_female) 
 print(bp_test)
 
@@ -262,8 +182,6 @@ residuals_female <- data.frame(
   Residuals = residuals(weighted_model_female)
 )
 
-library(ggplot2)
-
 # Plotting the residual graph for male
 ggplot(residuals_male, aes(x = Fitted_Values, y = Residuals)) +
   geom_point(color = "blue") +
@@ -278,19 +196,8 @@ ggplot(residuals_female, aes(x = Fitted_Values, y = Residuals)) +
   ggtitle("Residual Plot for Female (Weighted Regression)") +
   xlab("Fitted Values") + ylab("Residuals")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+#===========================================================================
+#===========================================================================
 
 #Robustness Check
 # 1️: Only considering the core independent variable
