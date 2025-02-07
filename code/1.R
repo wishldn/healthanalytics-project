@@ -85,23 +85,23 @@ library(lmtest)
 # Calculating Huber-White heteroscedasticity and robust standard error
 robust_se <- vcovHC(weighted_model, type = "HC0")  
 
-# 计算带稳健标准误的回归结果
+# Calculating the regression result with robust se
 robust_model <- coeftest(weighted_model, vcov = robust_se)
 
-# 输出稳健标准误的回归结果
+#print the regression result of robust se
 print(robust_model)
 
-#前者调整过头，所以使用Robust Standar Errors: Design-Based Standard Errors 作为最终输出结果
+#the robust_mode was over-adjusted，therefore  the Robust Standar Errors: Design-Based Standard Errors was used as the final print result
 summary(weighted_model, vartype = c("se", "ci"))
 
-# 3. 画出残差图（Residual Plot）如果点均匀分布，无系统性模式，说明同方差成立。如果点呈现漏斗状或其他系统性变化，说明存在异方差问题。
+# 3. Residual Plot："If the points are uniformly distributed without a systematic pattern, it indicates that homoscedasticity holds. If the points exhibit a funnel shape or other systematic variations, it suggests the presence of heteroscedasticity.
 library(ggplot2)
 
-# 计算加权回归（WLS）残差
+# Calculating the residual of WLS
 data_clean$residuals_wls <- residuals(weighted_model)
 data_clean$fitted_wls <- fitted(weighted_model)
 
-# 绘制残差图
+# Plotting residual graph
 ggplot(data_clean, aes(x = fitted_wls, y = residuals_wls)) +
   geom_point(alpha = 0.5, color = "blue") +  # 绘制残差点
   geom_smooth(method = "loess", color = "red", se = FALSE) +  # 添加 LOESS 平滑曲线
@@ -111,7 +111,7 @@ ggplot(data_clean, aes(x = fitted_wls, y = residuals_wls)) +
   theme_minimal()
 
 
-# 重新计算回归模型并使用稳健标准误
+# Building the regression model again with the robust se
 robust_model <- coeftest(lm_model_multi, vcov = vcovHC(lm_model_multi, type = "HC"))
 print(robust_model)
 
@@ -122,15 +122,15 @@ print(robust_model)
 
 
 
-# 分别提取男性和女性的数据
+# Extract the data from male and female separately
 data_male <- subset(data_clean, SEX == 1)
 data_female <- subset(data_clean, SEX == 2)
 
 
-# 定义权重结构（使用 PERWEIGHT）
+# Define the weight structure（using PERWEIGHT）
 library(lmtest)
 
-# 使用 PERWEIGHT 作为加权变量
+# Using PERWEIGHT as weighted variable
 wls_male <- lm(K6 ~ CIGSDAY + AGE  + HEALTH + NCHILD + INCFAM07ON, 
                data = data_male, weights = PERWEIGHT)
 
@@ -143,18 +143,18 @@ summary(wls_female)
 
 library(ggplot2)
 
-# 生成残差数据
+# Generating the result of residual
 residuals_male <- data.frame(Fitted = fitted(wls_male), Residuals = residuals(wls_male))
 residuals_female <- data.frame(Fitted = fitted(wls_female), Residuals = residuals(wls_female))
 
-# 画男性残差图
+# Plotting the residual graph for male
 ggplot(residuals_male, aes(x = Fitted, y = Residuals)) +
   geom_point(color = "blue", alpha = 0.5) +
   geom_smooth(method = "loess", color = "red", se = FALSE) +
   labs(title = "Residual Plot for Males (WLS)", x = "Fitted Values", y = "Residuals") +
   theme_minimal()
 
-# 画女性残差图
+# Plotting the residual graph for female
 ggplot(residuals_female, aes(x = Fitted, y = Residuals)) +
   geom_point(color = "blue", alpha = 0.5) +
   geom_smooth(method = "loess", color = "red", se = FALSE) +
@@ -166,30 +166,30 @@ ggplot(residuals_female, aes(x = Fitted, y = Residuals)) +
 
 
 
-# svyglm抽样调查
+# svyglm for sample survey
 
 library(survey)
 
-# 定义男性和女性的抽样设计
+# Define the samplomg design for male and femmale
 design_male <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_male)
 design_female <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_female)
 
 
 
-# 对男性进行加权回归
+# Weighted regression for male
 weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
                               design = design_male)
 vcov(weighted_model_male) 
 
-# 对女性进行加权回归
+# Weighted regression for female
 weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
                                 design = design_female)
 
-# 🔹 VIF 多重共线性检查 male
+# 🔹 VIF check: male
 library(car)
 vif(weighted_model_male)
 
-# 计算整个模型的 F 统计量 male
+# Calculate the F statistic for the entire model: male
 f_test <- regTermTest(weighted_model_male, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
 print(f_test)
 
@@ -385,4 +385,14 @@ p <- length(coef(model_5)) - 1
 adjusted_R25 <- 1 - ((1 - R25) * (n - 1) / (n - p - 1))
 print(R25)
 print(adjusted_R25)
+
+#age group 
+univariate_model_group1<-data_clean%>%filter(AGE<=30)
+univariate_model_group2<-data_clean%>%filter(AGE>30&AGE<=50)
+univariate_model_group3<-data_clean%>%filter(AGE>50)
+#Weighted regression for age group 1 (18-30)
+design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = univariate_model_group1)
+weighted_model <- svyglm(K6 ~ CIGSDAY + SEX + HEALTH + NCHILD + INCFAM07ON, 
+                         design = design)
+summary(weighted_model,vartype = c("se", "ci"))
 
