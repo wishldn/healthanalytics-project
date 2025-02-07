@@ -21,6 +21,9 @@ knitr::opts_chunk$set(echo = TRUE)
 # Load required packages
 # This ensures that all necessary libraries for data manipulation, visualization, and statistical modeling are installed and loaded.
 packages <- c("dplyr", "ggplot2", "tidyr", "corrplot", "ggcorrplot", "car", "survey", "ipumsr")
+library(lmtest)
+library(sandwich)
+library(lmtest)
 package.check <- lapply(packages, function(x) {
   if (!require(x, character.only = TRUE)) {
     install.packages(x, dependencies = TRUE)
@@ -153,59 +156,6 @@ ggplot(data_clean, aes(x = fitted_wls, y = residuals_wls)) +
 ```
 
 ## Gender-Specific Analysis
-
-```{r}
-# Separate analysis for male and female participants
-data_male <- subset(data_clean, SEX == 1)
-data_female <- subset(data_clean, SEX == 2)
-
-wls_male <- lm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, data = data_male, weights = PERWEIGHT)
-wls_female <- lm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, data = data_female, weights = PERWEIGHT)
-
-summary(wls_male)
-summary(wls_female)
-```
-
-## Residual Analysis for Weighted Least Squares (WLS)
-
-```{r load-libraries, message=FALSE}
-# Load required libraries
-library(ggplot2)
-```
-
-```{r residuals-male}
-# Generate residuals for males
-residuals_male <- data.frame(Fitted = fitted(wls_male), Residuals = residuals(wls_male))
-
-# Create residual plot for males
-# Purpose: To check if residuals are randomly distributed around zero, indicating a well-fitted model.
-ggplot(residuals_male, aes(x = Fitted, y = Residuals)) +
-  geom_point(color = "blue", alpha = 0.5) +
-  geom_smooth(method = "loess", color = "red", se = FALSE) +
-  labs(title = "Residual Plot for Males (WLS)", x = "Fitted Values", y = "Residuals") +
-  theme_minimal()
-```
-
-```{r residuals-female}
-# Generate residuals for females
-residuals_female <- data.frame(Fitted = fitted(wls_female), Residuals = residuals(wls_female))
-
-# Create residual plot for females
-# Purpose: To assess model adequacy and check for heteroscedasticity.
-ggplot(residuals_female, aes(x = Fitted, y = Residuals)) +
-  geom_point(color = "blue", alpha = 0.5) +
-  geom_smooth(method = "loess", color = "red", se = FALSE) +
-  labs(title = "Residual Plot for Females (WLS)", x = "Fitted Values", y = "Residuals") +
-  theme_minimal()
-```
-
-## Survey Weighted Regression Analysis
-
-```{r load-survey-libraries, message=FALSE}
-# Load required library for survey-weighted regression
-library(survey)
-```
-
 ```{r define-survey-design}
 # Define survey design objects for males and females
 # Purpose: To account for survey weights in the regression analysis.
@@ -218,9 +168,6 @@ design_female <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_female)
 # Purpose: To estimate regression coefficients while accounting for survey weights.
 weighted_model_male <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07ON, 
                               design = design_male)
-
-# Extract variance-covariance matrix of the estimated coefficients
-vcov(weighted_model_male) 
 ```
 
 ```{r weighted-regression-female}
@@ -230,12 +177,6 @@ weighted_model_female <- svyglm(K6 ~ CIGSDAY + AGE + HEALTH + NCHILD + INCFAM07O
 ```
 
 ## Multicollinearity Check Using Variance Inflation Factor (VIF)
-
-```{r load-vif-library, message=FALSE}
-# Load library for multicollinearity checks
-library(car)
-```
-
 ```{r vif-check-male}
 # Check for multicollinearity in the male model
 # Purpose: To detect whether predictor variables are highly correlated.
@@ -294,12 +235,6 @@ print(adjusted_R2_female)
 ```
 
 ## Heteroscedasticity Test
-
-```{r load-lmtest-library, message=FALSE}
-# Load library for heteroscedasticity tests
-library(lmtest)
-```
-
 ```{r bp-test-male}
 # Perform Breusch-Pagan test for heteroscedasticity in the male model
 # Purpose: To check if variance of residuals is constant across all fitted values.
