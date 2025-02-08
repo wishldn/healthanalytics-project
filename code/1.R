@@ -294,6 +294,19 @@ adjusted_R25 <- 1 - ((1 - R25) * (n - 1) / (n - p - 1))
 print(R25)
 print(adjusted_R25)
 
+model_sc <- svyglm(SLEEPFALL ~ CIGSDAY, design = design, family = gaussian())
+model_ks <- svyglm(K6 ~ CIGSDAY + SLEEPFALL, design = design, family = gaussian())
+mediate_model_3 <- mediate(model_sc, model_ks, treat = "CIGSDAY", mediator = "SLEEPFALL", boot = TRUE, sims = 1000)
+summary(mediate_model_3)
+
+model_ssc <- svyglm(SLEEPSTAY ~ CIGSDAY, design = design, family = gaussian())
+model_kss <- svyglm(K6 ~ CIGSDAY + SLEEPSTAY, design = design, family = gaussian())
+mediate_model_4 <- mediate(model_ssc, model_kss, treat = "CIGSDAY", mediator = "SLEEPSTAY", boot = TRUE, sims = 1000)
+summary(mediate_model_4)
+
+
+
+
 #age group 
 univariate_model_group1<-data_clean%>%filter(AGE<=30)
 univariate_model_group2<-data_clean%>%filter(AGE>30&AGE<=50)
