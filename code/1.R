@@ -300,7 +300,7 @@ univariate_model_group2<-data_clean%>%filter(AGE>30&AGE<=50)
 univariate_model_group3<-data_clean%>%filter(AGE>50)
 #Weighted regression for age group 1 (18-30)
 design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = univariate_model_group1)
-weighted_model <- svyglm(K6 ~ CIGSDAY + SEX + HEALTH + NCHILD + INCFAM07ON, 
+age_model <- svyglm(K6 ~ CIGSDAY + SEX + HEALTH + NCHILD + INCFAM07ON, 
                          design = design)
-summary(weighted_model,vartype = c("se", "ci"))
+summary(age_model,vartype = c("se", "ci"))
 
