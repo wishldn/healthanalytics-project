@@ -1,7 +1,6 @@
 packages <- c("dplyr", "ggplot2", "tidyr", "corrplot", "ggcorrplot", "car", "survey", "ipumsr")
 library(lmtest)
 library(sandwich)
-library(lmtest)
 package.check <- lapply(packages, function(x) {
   if (!require(x, character.only = TRUE)) {
     install.packages(x, dependencies = TRUE)
