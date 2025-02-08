@@ -304,7 +304,8 @@ model_kss <- svyglm(K6 ~ CIGSDAY + SLEEPSTAY, design = design, family = gaussian
 mediate_model_4 <- mediate(model_ssc, model_kss, treat = "CIGSDAY", mediator = "SLEEPSTAY", boot = TRUE, sims = 1000)
 summary(mediate_model_4)
 
-
+model_conc <- svyglm(CIGSDAY ~ SLEEPFALL , design = design, family = gaussian())
+summary(model_conc)
 
 
 #age group 
