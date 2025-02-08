@@ -87,7 +87,6 @@ ggplot(data_clean, aes(x = CIGSDAY, y = K6)) +
 ```{r}
 # Define survey design for weighted analysis
 # This accounts for survey sampling weights to provide more accurate estimates.
-library(survey)
 design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_clean)
 ```
 
@@ -106,7 +105,6 @@ print(f_test)
 ```
 
 ## Compute Weighted R-Squared and Adjusted R-Squared
-
 ```{r}
 # Compute R-squared and adjusted R-squared for the weighted model
 y_hat <- predict(weighted_model, type = "response")
@@ -125,31 +123,31 @@ print(adjusted_R2_weighted)
 ## Heteroscedasticity Tests
 
 ```{r}
-# Breusch-Pagan test for heteroscedasticity
-library(lmtest)
+# 1. Breusch-Pagan test for heteroscedasticity
 bp_test <- bptest(weighted_model)
 print(bp_test)
 ```
 
 ```{r}
-# White test for heteroscedasticity (alternative method)
-library(sandwich)
+# 2. White test for heteroscedasticity (alternative method)
 robust_se <- vcovHC(weighted_model, type = "HC0")  
 robust_model <- coeftest(weighted_model, vcov = robust_se)
 print(robust_model)
+#the robust_mode was over-adjusted，therefore  the Robust Standar Errors: Design-Based Standard Errors was used as the final print result
+summary(weighted_model, vartype = c("se", "ci"))
 ```
 
 ## Residual Plot for Heteroscedasticity Check
-
 ```{r}
-# Create residual plot to check for heteroscedasticity
-data_clean$residuals_wls <- residuals(weighted_model)
-data_clean$fitted_wls <- fitted(weighted_model)
+# 3. Residual Plot
+# Calculating the residual of svyglm
+data_clean$residuals_svyglm <- residuals(weighted_model)
+data_clean$fitted_svyglm <- fitted(weighted_model)
 
-ggplot(data_clean, aes(x = fitted_wls, y = residuals_wls)) +
-  geom_point(alpha = 0.5, color = "blue") +  
+ggplot(data_clean, aes(x = fitted_svyglm, y = residuals_svyglm)) +
+  geom_point(alpha = 0.5, color = "blue") + 
   geom_smooth(method = "loess", color = "red", se = FALSE) +  
-  labs(title = "Residual Plot for Weighted Least Squares (WLS)",
+  labs(title = "Residual Plot for Survey Weighted Generalized Linear Model",
        x = "Fitted Values",
        y = "Residuals") +
   theme_minimal()
@@ -159,6 +157,8 @@ ggplot(data_clean, aes(x = fitted_wls, y = residuals_wls)) +
 ```{r define-survey-design}
 # Define survey design objects for males and females
 # Purpose: To account for survey weights in the regression analysis.
+data_male <- subset(data_clean, SEX == 1)
+data_female <- subset(data_clean, SEX == 2)
 design_male <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_male)
 design_female <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = data_female)
 ```
@@ -266,8 +266,6 @@ summary(weighted_model_female, vartype = c("se", "ci"))
 Residual analysis helps assess model assumptions such as homoscedasticity and normality. Here, we extract fitted values and residuals for both male and female models and visualize them using residual plots.
 
 ```{r residual_analysis}
-library(ggplot2)
-
 # Extract fitted values and residuals for male model
 residuals_male <- data.frame(
   Fitted_Values = fitted(weighted_model_male),
@@ -295,7 +293,10 @@ ggplot(residuals_female, aes(x = Fitted_Values, y = Residuals)) +
   xlab("Fitted Values") + ylab("Residuals")
 ```
 
-### 3. Robustness Checks
+#===========================================================================
+#===========================================================================
+
+###Robustness Checks
 
 To ensure the robustness of our regression results, we run multiple models with increasing levels of control variables.
 
@@ -304,12 +305,24 @@ To ensure the robustness of our regression results, we run multiple models with 
 This model includes only the core independent variable (CIGSDAY).
 
 ```{r model_1}
+# 1️: Only considering the core independent variable
 model_1 <- svyglm(K6 ~ CIGSDAY, design = design)
 summary(model_1, vartype = c("se", "ci"))
-
-# Compute F-test for overall model significance
+# Calculating the F-Statistic
 f_test <- regTermTest(model_1, ~ CIGSDAY)
-print(f_test)
+print(f_test) 
+# R-squared & adjusted
+y_hat <- predict(model_1, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R21 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_1)) - 1  
+adjusted_R21 <- 1 - ((1 - R21) * (n - 1) / (n - p - 1))
+print(R21)
+print(adjusted_R21)
 ```
 
 #### Model 2: Adding Demographic Variables
@@ -317,11 +330,24 @@ print(f_test)
 This model includes age and sex as additional covariates.
 
 ```{r model_2}
+# 2️:Adding the variables of age and sex
 model_2 <- svyglm(K6 ~ CIGSDAY + AGE + SEX, design = design)
 summary(model_2, vartype = c("se", "ci"))
-
-f_test <- regTermTest(model_2, ~ CIGSDAY + AGE + SEX)
-print(f_test)
+# Calculating the F-Statistic
+f_test <- regTermTest(model_2, ~ CIGSDAY+ AGE + SEX)
+print(f_test) 
+# R-squared & adjusted
+y_hat <- predict(model_2, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R22 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_2)) - 1  
+adjusted_R22 <- 1 - ((1 - R22) * (n - 1) / (n - p - 1))
+print(R22)
+print(adjusted_R22)
 ```
 
 #### Model 3: Adding Health and Family Variables
@@ -329,11 +355,24 @@ print(f_test)
 This model adds health status and number of children as additional covariates.
 
 ```{r model_3}
+# 3️: Adding variables about general health condition and family
 model_3 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD, design = design)
 summary(model_3, vartype = c("se", "ci"))
-
-f_test <- regTermTest(model_3, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD)
-print(f_test)
+# Calculating the F-Statistic
+f_test <- regTermTest(model_3, ~ CIGSDAY+ AGE + SEX + HEALTH + NCHILD)
+print(f_test) 
+# R-squared & adjusted
+y_hat <- predict(model_3, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R23 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_3)) - 1  
+adjusted_R23 <- 1 - ((1 - R23) * (n - 1) / (n - p - 1))
+print(R23)
+print(adjusted_R23)
 ```
 
 #### Model 4: Adding Economic Variables
@@ -341,11 +380,25 @@ print(f_test)
 This model further incorporates family income as an additional control variable.
 
 ```{r model_4}
+# 4️: Adding income related variable
 model_4 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON, design = design)
 summary(model_4, vartype = c("se", "ci"))
+# Calculating the F-Statistic
+f_test <- regTermTest(model_4, ~ CIGSDAY+ AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
+print(f_test) 
+# R-squared & adjusted
+y_hat <- predict(model_4, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R24 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_4)) - 1  
+adjusted_R24 <- 1 - ((1 - R24) * (n - 1) / (n - p - 1))
+print(R24)
+print(adjusted_R24)
 
-f_test <- regTermTest(model_4, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON)
-print(f_test)
 ```
 
 #### Model 5: Full Model Including Sleep Variables
@@ -353,45 +406,37 @@ print(f_test)
 This is the most comprehensive model, incorporating sleep-related variables as well.
 
 ```{r model_5}
+# 5️: Adding sleep related variable (entire model)
 model_5 <- svyglm(K6 ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY, design = design)
 summary(model_5, vartype = c("se", "ci"))
-
+# Calculating the F-Statistics for the entire model
 f_test <- regTermTest(model_5, ~ CIGSDAY + AGE + SEX + HEALTH + NCHILD + INCFAM07ON + SLEEPFALL + SLEEPSTAY)
-print(f_test)
+print(f_test) 
+# R-squared & adjusted
+y_hat <- predict(model_5, type = "response")
+y <- data_clean$K6
+w <- weights(design)
+sst <- sum(w * (y - weighted.mean(y, w))^2)
+sse <- sum(w * (y - y_hat)^2)
+R25 <- 1 - (sse / sst)
+n <- nrow(data_clean) 
+p <- length(coef(model_5)) - 1  
+adjusted_R25 <- 1 - ((1 - R25) * (n - 1) / (n - p - 1))
+print(R25)
+print(adjusted_R25)
 ```
 
-### 4. Model Fit Evaluation
+#age group 
+```{r age_model}
+univariate_model_group1<-data_clean%>%filter(AGE<=30)
+univariate_model_group2<-data_clean%>%filter(AGE>30&AGE<=50)
+univariate_model_group3<-data_clean%>%filter(AGE>50)
+#Weighted regression for age group 1 (18-30)
+design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = univariate_model_group1)
+age_model <- svyglm(K6 ~ CIGSDAY + SEX + HEALTH + NCHILD + INCFAM07ON, 
+                         design = design)
+summary(age_model,vartype = c("se", "ci"))
 
-To evaluate model performance, we compute R-squared and adjusted R-squared for each model.
-
-```{r model_fit}
-compute_r2 <- function(model, data, design) {
-  y_hat <- predict(model, type = "response")
-  y <- data$K6
-  w <- weights(design)
-  sst <- sum(w * (y - weighted.mean(y, w))^2)
-  sse <- sum(w * (y - y_hat)^2)
-  R2 <- 1 - (sse / sst)
-  n <- nrow(data)
-  p <- length(coef(model)) - 1
-  adjusted_R2 <- 1 - ((1 - R2) * (n - 1) / (n - p - 1))
-  return(list(R2 = R2, adjusted_R2 = adjusted_R2))
-}
-
-r2_model_1 <- compute_r2(model_1, data_clean, design)
-print(r2_model_1)
-
-r2_model_2 <- compute_r2(model_2, data_clean, design)
-print(r2_model_2)
-
-r2_model_3 <- compute_r2(model_3, data_clean, design)
-print(r2_model_3)
-
-r2_model_4 <- compute_r2(model_4, data_clean, design)
-print(r2_model_4)
-
-r2_model_5 <- compute_r2(model_5, data_clean, design)
-print(r2_model_5)
 ```
 
 ### Conclusion
