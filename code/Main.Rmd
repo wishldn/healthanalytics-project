@@ -375,7 +375,7 @@ print(R23)
 print(adjusted_R23)
 ```
 
-#### Model 4: Adding Economic Variables
+#### Model 4: Adding Economic Variables (main regression model)
 
 This model further incorporates family income as an additional control variable.
 
@@ -401,7 +401,7 @@ print(adjusted_R24)
 
 ```
 
-#### Model 5: Full Model Including Sleep Variables
+#### Model 5: Model Including Sleep Variables for further exploration
 
 This is the most comprehensive model, incorporating sleep-related variables as well.
 
