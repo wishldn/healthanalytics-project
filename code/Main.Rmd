@@ -375,7 +375,7 @@ print(R23)
 print(adjusted_R23)
 ```
 
-#### Model 4: Adding Economic Variables (main regression model)
+#### Model 4: Adding Economic Variables
 
 This model further incorporates family income as an additional control variable.
 
@@ -401,7 +401,7 @@ print(adjusted_R24)
 
 ```
 
-#### Model 5: Model Including Sleep Variables for further exploration
+#### Model 5: Full Model Including Sleep Variables
 
 This is the most comprehensive model, incorporating sleep-related variables as well.
 
@@ -425,6 +425,26 @@ adjusted_R25 <- 1 - ((1 - R25) * (n - 1) / (n - p - 1))
 print(R25)
 print(adjusted_R25)
 ```
+#View the mediating effects of sleep-related variables
+```{r mediate_model_4}
+model_sc <- svyglm(SLEEPFALL ~ CIGSDAY, design = design, family = gaussian())
+model_ks <- svyglm(K6 ~ CIGSDAY + SLEEPFALL, design = design, family = gaussian())
+mediate_model_3 <- mediate(model_sc, model_ks, treat = "CIGSDAY", mediator = "SLEEPFALL", boot = TRUE, sims = 1000)
+summary(mediate_model_3)
+
+model_ssc <- svyglm(SLEEPSTAY ~ CIGSDAY, design = design, family = gaussian())
+model_kss <- svyglm(K6 ~ CIGSDAY + SLEEPSTAY, design = design, family = gaussian())
+mediate_model_4 <- mediate(model_ssc, model_kss, treat = "CIGSDAY", mediator = "SLEEPSTAY", boot = TRUE, sims = 1000)
+summary(mediate_model_4)
+
+```
+
+#Check whether the regression control variables affect CIGSDAY. Analyze all control variables one by one. If they are significant for CIGSDAY here and also significant for K6 in the basic regression model, they may be considered as confounding variables.
+```{r model_conc}
+model_conc <- svyglm(CIGSDAY ~ SLEEPFALL , design = design, family = gaussian())
+summary(model_conc)
+```
+
 
 #age group 
 ```{r age_model}
