@@ -457,7 +457,7 @@ design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = univariate_model_grou
 age_model <- svyglm(K6 ~ CIGSDAY + SEX + HEALTH + NCHILD + INCFAM07ON, 
                          design = design)
 summary(age_model,vartype = c("se", "ci"))
-
+#repeat the line 455-459 for univariate_model_group2(age 30-50) and univariate_model_group3(age50+)
 ```
 
 ### Conclusion
