@@ -1,5 +1,21 @@
-# Introduction to Health Analytics Group Project template
-Outline for Introduction to Health Analytics student group project
+Association Between Smoking and Mental Health: Empirical Evidence from IPUMS NHIS Data of US
+
+Authors
+Group Q:
+
+Haoxuan Li
+Jing Liu
+Lingjia Kang
+Qiannuo Chen
+Sitong Yan
+Xuyuan Jin
+
+Date
+2025.02.01
+
+Project Overview
+This project investigates the association between smoking (CIGSDAY) and mental health (K6) using IPUMS NHIS survey data from the United States (2015-2018). The analysis employs survey-weighted regression models to account for complex sampling designs and conducts robustness checks to validate the findings.
+
 
 ## Setup Instructions
 1. One person from the group should:
@@ -17,6 +33,18 @@ In this section you should describe what data you use for your project with enou
 - **Countries**: United States of America
 - **Years**: 2015, 2016, 2017, 2018
 - **How to access the data**: This analysis utilized the IPUMS NHIS data from United States (URL:https://nhis.ipums.org/nhis/), selecting individual survey information from 2015 to 2018 to ensure data availability and integrity, the variables were selected from the IPUMS include:"AHOPELESS", "ANERVOUS", "ANERVOUS", "ARESTLESS", "ASAD", "AWORTHLESS", "AEFFORT", "CIGSDAY", "AGE", "SEX", "INFAM07ON","HEALTH","NCHILD", "COHABEVMAR", "EDUCREC1","EMPSTATIMP1","INCFAM97ON2", "CIGDAYMO", "HRSLEEP","SLEEPFALL", "SLEEPSTAY". Variables include "AHOPELESS", "ANERVOUS", "ANERVOUS", "ARESTLESS", "ASAD", "AWORTHLESS", "AEFFORT", "CIGSDAY", "AGE", "SEX", "INFAM07ON"and "HEALTH","NCHILD" were applied for main regression model, while "SLEEPFALL" and "SLEEPSTAY" were used for robustness check. Due to time constraint of the analysis, all other variables were not applied but considered to be used for robustness check if time permit. 
+
+
+Dataset
+The dataset used in this analysis is from the IPUMS NHIS (National Health Interview Survey). The data can be accessed at:
+IPUMS NHIS Data
+
+Key variables used in the analysis include:
+
+Mental health indicators: AHOPELESS, ANERVOUS, ARESTLESS, ASAD, AWORTHLESS, AEFFORT
+Smoking behavior: CIGSDAY
+Demographics: AGE, SEX, NCHILD, INCFAM07ON, HEALTH
+Sleep-related variables (for robustness checks): SLEEPFALL, SLEEPSTAY
 
   
 
