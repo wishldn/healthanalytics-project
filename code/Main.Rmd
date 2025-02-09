@@ -39,19 +39,8 @@ package.check <- lapply(packages, function(x) {
 ## Load and Clean Data
 
 ```{r}
-# Go to https://nhis.ipums.org/nhis/ and click "Log In". If
-you are a first-time user, click "Create Account", enter your email address and password,
-and submit your user information so that the NHIS data extract can be created.
+# Go to https://nhis.ipums.org/nhis/ and click "Log In". If you are a first-time user, click "Create Account", enter your email address and password, and submit your user information so that the NHIS data extract can be created. Once logged in, return to the home page and click "Explore and Select Data". Click the "Select Sample" button and check the boxes for 2015, 2016, 2017, 2018. Click the "Submit Sample Selection" button. The variable drop-down menu allows you to explore variables by subject. The search tool allows you to search for variables. Observe the options to limit search results by variable characteristics or variable type. You can add variables to the cart by clicking the plus sign in the "Add to Cart" column of the subject variable list or the search results list. Click the green "View Cart" button below the data cart. Review the variable selection. Notice that there are additional variables in the data cart. The data extraction system automatically provides the variables required to indicate the sample (year), variance estimates (SERIAL, PERNUM), and variables used to weight the selected variables and years. Click the green "Create Data Extraction" button. Review the "Extraction Request Summary" screen, describe your extraction, and click "Submit Extraction". You will receive an email when the data is ready for download. To access the page to download the data, follow the link in the email or click the "Download or Modify Extract" link on the home page. You will need to download the data file and the DDI codebook. Put them in the same directory! The DDI file is an auxiliary file that helps R read the data and properly format and label each variable. Finally, rename the file names to "nhis_00005.xml" and "nhis_00005.dat" to run the Rmd file
 
-Once logged in, return to the home page and click "Explore and Select Data".
-
-Click the "Select Sample" button and check the boxes for 2015, 2016, 2017, 2018. Click the "Submit Sample Selection" button.
-
-The variable drop-down menu allows you to explore variables by subject. The search tool allows you to search for variables. Observe the options to limit search results by variable characteristics or variable type. You can add variables to the cart by clicking the plus sign in the "Add to Cart" column of the subject variable list or the search results list.
-
-Click the green "View Cart" button below the data cart. Review the variable selection. Notice that there are additional variables in the data cart. The data extraction system automatically provides the variables required to indicate the sample (year), variance estimates (SERIAL, PERNUM), and variables used to weight the selected variables and years. Click the green "Create Data Extraction" button. Review the "Extraction Request Summary" screen, describe your extraction, and click "Submit Extraction".
-
-You will receive an email when the data is ready for download. To access the page to download the data, follow the link in the email or click the "Download or Modify Extract" link on the home page. You will need to download the data file and the DDI codebook. Put them in the same directory! The DDI file is an auxiliary file that helps R read the data and properly format and label each variable. Finally, rename the file names to "nhis_00005.xml" and "nhis_00005.dat" to run the Rmd file
 # The dataset contains various demographic and health-related variables, which will be used for statistical analysis. 
 ddi <- read_ipums_ddi("nhis_00005.xml")
 data <- read_ipums_micro(ddi)
