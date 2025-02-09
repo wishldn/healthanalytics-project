@@ -40,7 +40,8 @@ package.check <- lapply(packages, function(x) {
 
 ```{r}
 # Load dataset using IPUMS
-# The dataset contains various demographic and health-related variables, which will be used for statistical analysis.
+# The dataset contains various demographic and health-related variables, which will be used for statistical analysis. 
+# Name the xml file and dat file as "nhis_00005.xml" and "nhis_00005.dat"
 ddi <- read_ipums_ddi("nhis_00005.xml")
 data <- read_ipums_micro(ddi)
 ```
