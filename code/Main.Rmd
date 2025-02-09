@@ -38,9 +38,7 @@ package.check <- lapply(packages, function(x) {
 
 ## Load and Clean Data
 
-Go to https://nhis.ipums.org/nhis/ and click "Log In". If
-you are a first-time user, click "Create Account", enter your email address and password,
-and submit your user information so that the NHIS data extract can be created.
+Go to https://nhis.ipums.org/nhis/ and click "Log In". If you are a first-time user, click "Create Account", enter your email address and password, and submit your user information so that the NHIS data extract can be created.
 
 Once logged in, return to the home page and click "Explore and Select Data".
 
