@@ -76,7 +76,7 @@ Open the Main.Rmd file in RStudio.
 Click Knit to generate an HTML report of the analysis.
 Alternatively, you can run the script chunk by chunk to inspect the intermediate outputs.
 
-###5. Notes on Reproducibility
+### 5. Notes on Reproducibility
 Ensure that the dataset is available in the correct format before running the code.
 The script uses survey weights, so results may slightly differ from unweighted models.
 If any package is missing, install it using install.packages("package_name").
