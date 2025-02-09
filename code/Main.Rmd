@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 # Load required packages
 # This ensures that all necessary libraries for data manipulation, visualization, and statistical modeling are installed and loaded.
-packages <- c("dplyr", "ggplot2", "tidyr", "corrplot", "ggcorrplot", "car", "survey", "ipumsr")
+packages <- c("dplyr", "ggplot2", "tidyr", "corrplot", "ggcorrplot", "car", "survey", "ipumsr", "mediation")
 library(lmtest)
 library(sandwich)
 package.check <- lapply(packages, function(x) {
