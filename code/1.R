@@ -1,6 +1,8 @@
 packages <- c("dplyr", "ggplot2", "tidyr", "corrplot", "ggcorrplot", "car", "survey", "ipumsr")
 library(lmtest)
 library(sandwich)
+install.packages("mediation")
+library(mediation)
 package.check <- lapply(packages, function(x) {
   if (!require(x, character.only = TRUE)) {
     install.packages(x, dependencies = TRUE)
@@ -294,6 +296,7 @@ adjusted_R25 <- 1 - ((1 - R25) * (n - 1) / (n - p - 1))
 print(R25)
 print(adjusted_R25)
 
+#View the mediating effects of sleep-related variables
 model_sc <- svyglm(SLEEPFALL ~ CIGSDAY, design = design, family = gaussian())
 model_ks <- svyglm(K6 ~ CIGSDAY + SLEEPFALL, design = design, family = gaussian())
 mediate_model_3 <- mediate(model_sc, model_ks, treat = "CIGSDAY", mediator = "SLEEPFALL", boot = TRUE, sims = 1000)
@@ -304,6 +307,9 @@ model_kss <- svyglm(K6 ~ CIGSDAY + SLEEPSTAY, design = design, family = gaussian
 mediate_model_4 <- mediate(model_ssc, model_kss, treat = "CIGSDAY", mediator = "SLEEPSTAY", boot = TRUE, sims = 1000)
 summary(mediate_model_4)
 
+#Check whether the regression control variables affect CIGSDAY. 
+#Analyze all control variables one by one. If they are significant for 
+#CIGSDAY here and also significant for K6 in the basic regression model, they may be considered as confounding variables.
 model_conc <- svyglm(CIGSDAY ~ SLEEPFALL , design = design, family = gaussian())
 summary(model_conc)
 
@@ -315,6 +321,5 @@ univariate_model_group3<-data_clean%>%filter(AGE>50)
 #Weighted regression for age group 1 (18-30)
 design <- svydesign(ids = ~1, weights = ~PERWEIGHT, data = univariate_model_group1)
 age_model <- svyglm(K6 ~ CIGSDAY + SEX + HEALTH + NCHILD + INCFAM07ON, 
-                         design = design)
+                    design = design)
 summary(age_model,vartype = c("se", "ci"))
-
