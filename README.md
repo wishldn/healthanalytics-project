@@ -13,10 +13,12 @@ Outline for Introduction to Health Analytics student group project
 
 ## Description of data
 In this section you should describe what data you use for your project with enough detail that anyone could download it and run your analysis.
-- **IPUMS series**: Write the title of the IPUMS series you use
-- **Countries**: Write the country or countries
-- **Years**: List the years you include here
-- **How to access the data**: Explain what the process is for getting access to the data. Include a link to the relevant website.
+- **IPUMS series**: IPUMS NATIONAL HEALTH INTERVIEW SERIES
+- **Countries**: United States of America
+- **Years**: 2015, 2016, 2017, 2018
+- **How to access the data**: This analysis utilized the IPUMS NHIS data from United States (URL:https://nhis.ipums.org/nhis/), selecting individual survey information from 2015 to 2018 to ensure data availability and integrity, the variables were selected from the IPUMS include:"AHOPELESS", "ANERVOUS", "ANERVOUS", "ARESTLESS", "ASAD", "AWORTHLESS", "AEFFORT", "CIGSDAY", "AGE", "SEX", "INFAM07ON","HEALTH","NCHILD", "COHABEVMAR", "EDUCREC1","EMPSTATIMP1","INCFAM97ON2", "CIGDAYMO", "HRSLEEP","SLEEPFALL", "SLEEPSTAY". Variables include "AHOPELESS", "ANERVOUS", "ANERVOUS", "ARESTLESS", "ASAD", "AWORTHLESS", "AEFFORT", "CIGSDAY", "AGE", "SEX", "INFAM07ON"and "HEALTH","NCHILD" were applied for main regression model, while "SLEEPFALL" and "SLEEPSTAY" were used for robustness check. Due to time constraint of the analysis, all other variables were not applied but considered to be used for robustness check if time permit. 
+
+  
 
 ## Description of how to run the code
 Here you should explain how someone could replicate the analysis in your report. If there are several code files, explain what each of them does.
