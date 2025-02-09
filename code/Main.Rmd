@@ -23,6 +23,8 @@ knitr::opts_chunk$set(echo = TRUE)
 packages <- c("dplyr", "ggplot2", "tidyr", "corrplot", "ggcorrplot", "car", "survey", "ipumsr", "mediation")
 library(lmtest)
 library(sandwich)
+install.packages("mediation")
+library(mediation)
 package.check <- lapply(packages, function(x) {
   if (!require(x, character.only = TRUE)) {
     install.packages(x, dependencies = TRUE)
